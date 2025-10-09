@@ -85,13 +85,13 @@ func pathIsClear(v,h):
 func Can2MovePawn(v, h):
 
 	var direction = 0
-	if color == 1:
+	if color == 0:
 		direction = 1
 	else:
 		direction = -1
 
 	var start_row = 0
-	if color == 1:
+	if color == 0:
 		start_row = 1
 	else:
 		start_row = 6
