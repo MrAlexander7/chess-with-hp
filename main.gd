@@ -8,7 +8,7 @@ func _ready() -> void:
 	#createPiece(0,1,4,7)
 	parseChessString("rnbqkbnr/pppppppp/________/________/________/________/PPPPPPPP/RNBQKBNR")
 	pass
-	
+
 func parseChessString(s):
 	var allTypes="KQBNRP"
 	#rnbqkbnr/pppppppp/________/________/________/________/PPPPPPPP/RNBQKBNR  - почтакова позиція
@@ -69,10 +69,17 @@ func findPieceAtCoords(cx, cy):
 
 func createPiece(tp, cl, v, h):
 	var p = preload("res://piece.tscn").instantiate()
-	p.init_props(0, tp, cl, v, h)
+	p.init_props(0, tp, cl, v, h, self)
 	add_child(p)
 	pieces.append(p)
 	
 func removePiece(p):
 	p.queue_free()
 	pieces.erase(p)
+
+
+func get_piece_at(v, h):
+	for p in pieces:
+		if p.vertid == v and p.horzid == h:
+			return p
+	return null
