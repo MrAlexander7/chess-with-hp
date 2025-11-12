@@ -43,7 +43,7 @@ func _input(event: InputEvent) -> void:
 				#перевірити координати та можлисть здіснювати ходи
 				if activePiece.canMove2Cell(cellCoord.x, cellCoord.y):
 					activePiece.placeAtCell(cellCoord.x, cellCoord.y)
-					activePiece(null)
+					activatePiece(null)
 
 func activatePiece(p):
 	activePiece=p

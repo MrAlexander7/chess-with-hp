@@ -11,9 +11,16 @@ config_version=5
 [application]
 
 config/name="ChessWithHitpoints"
-run/main_scene="uid://dqj7afrmhs1da"
+config/version="1.0"
+run/main_scene="uid://38kbdhxbjcdf"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/mode=3
 
 [rendering]
 

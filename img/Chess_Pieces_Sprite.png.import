@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bqj6j44uko8jo"
-path="res://.godot/imported/Chess_Board.png-c7e098c888c20f1e9f65c82b39dbe5eb.ctex"
+uid="uid://bk65o6ijnmo3b"
+path="res://.godot/imported/Chess_Pieces_Sprite.png-17a4767c6007cc6db2994fe607985247.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Chess_Board.png"
-dest_files=["res://.godot/imported/Chess_Board.png-c7e098c888c20f1e9f65c82b39dbe5eb.ctex"]
+source_file="res://img/Chess_Pieces_Sprite.png"
+dest_files=["res://.godot/imported/Chess_Pieces_Sprite.png-17a4767c6007cc6db2994fe607985247.ctex"]
 
 [params]
 

@@ -111,3 +111,6 @@ func Can2MovePawn(v, h):
 		return true
 	
 	return false
+
+func canAttack2Pice():
+	pass
