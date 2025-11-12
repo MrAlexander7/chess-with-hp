@@ -1,12 +1,20 @@
-[gd_scene load_steps=3 format=3 uid="uid://38kbdhxbjcdf"]
+[gd_scene load_steps=5 format=4 uid="uid://38kbdhxbjcdf"]
 
-[ext_resource type="Script" path="res://main.gd" id="1_ig7tw"]
-[ext_resource type="Texture2D" uid="uid://bqj6j44uko8jo" path="res://img/Chess_Board.png" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://ba3r25ykscp80" path="res://scripts/main.gd" id="1_v0l8b"]
+[ext_resource type="Texture2D" uid="uid://lrgff6yw02nw" path="res://img/White_Cell.png" id="2_wp4xf"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0ha60"]
+texture = ExtResource("2_wp4xf")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_p1hux"]
+tile_size = Vector2i(67, 67)
+sources/1 = SubResource("TileSetAtlasSource_0ha60")
 
 [node name="Main" type="Node2D"]
-script = ExtResource("1_ig7tw")
+script = ExtResource("1_v0l8b")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(265.345, 347.026)
-scale = Vector2(0.192827, 0.19556)
-texture = ExtResource("2_0xm2m")
+[node name="Board" type="TileMapLayer" parent="."]
+tile_map_data = PackedByteArray("AAAPAAgAAQAAAAAAAAAAAAYAAQAAAAAAAAABAAcAAQAAAAAAAAABAAUAAQAAAAAAAAACAAYAAQAAAAAAAAADAAcAAQAAAAAAAAADAAUAAQAAAAAAAAAEAAYAAQAAAAAAAAAFAAcAAQAAAAAAAAAGAAYAAQAAAAAAAAAFAAUAAQAAAAAAAAAHAAUAAQAAAAAAAAAHAAcAAQAAAAAAAAAGAAQAAQAAAAAAAAAHAAMAAQAAAAAAAAAGAAIAAQAAAAAAAAAFAAMAAQAAAAAAAAAEAAQAAQAAAAAAAAAHAAEAAQAAAAAAAAAGAAAAAQAAAAAAAAAFAAEAAQAAAAAAAAAEAAIAAQAAAAAAAAADAAMAAQAAAAAAAAACAAQAAQAAAAAAAAABAAMAAQAAAAAAAAAAAAQAAQAAAAAAAAAAAAIAAQAAAAAAAAABAAEAAQAAAAAAAAAAAAAAAQAAAAAAAAACAAAAAQAAAAAAAAADAAEAAQAAAAAAAAAEAAAAAQAAAAAAAAACAAIAAQAAAAAAAAA=")
+tile_set = SubResource("TileSet_p1hux")

@@ -3,6 +3,8 @@ var pieces=[]
 
 var activePiece=null
 
+@onready var tilemapBoard = $Board
+
 func _ready() -> void:
 	#createPiece(0,0,4,0)
 	#createPiece(0,1,4,7)
@@ -29,47 +31,80 @@ func parseChessString(s):
 				h-=1
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		if event.pressed:
-			#знайти фігуру, на яку натиснули
-			if activePiece==null:
-				var p = findPieceAtCoords(event.position.x,event.position.y)
-				if p!=null:
-					#removePiece(p)
-					activatePiece(p)
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		
+		# 1. Отримуємо позицію миші в глобальних координатах
+		var mouse_pos_global = get_global_mouse_position()
+		
+		# 2. Конвертуємо глобальну позицію в локальну позицію TileMap
+		var mouse_pos_local = tilemapBoard.to_local(mouse_pos_global)
+		
+		# 3. Отримуємо координати клітинки TileMap
+		var tilemap_coords = tilemapBoard.local_to_map(mouse_pos_local)
+		
+		# 4. Перевіряємо, чи ми клікнули в межах дошки
+		if tilemap_coords.x < 0 or tilemap_coords.x > 7 or tilemap_coords.y < 0 or tilemap_coords.y > 7:
+			activatePiece(null) # Клік за межами, знімаємо виділення
+			return
+			
+		# 5. КОНВЕРТУЄМО КООРДИНАТИ TILEMAP У ШАХОВІ КООРДИНАТИ
+		# TileMap (0,0) = A8. Шахи (0,7) = A8
+		# TileMap (0,7) = A1. Шахи (0,0) = A1
+		# Формула: chess_h = 7 - tilemap_y
+		var cellCoord = Vector2i(tilemap_coords.x, 7 - tilemap_coords.y)
+		
+		if activePiece == null:
+			# Якщо фігура не активна, шукаємо фігуру на клітинці, куди клікнули
+			var p = get_piece_at(cellCoord.x, cellCoord.y)
+			if p != null:
+				activatePiece(p)
+		else:
+			# Якщо фігура активна, перевіряємо, чи може вона сюди піти
+			if activePiece.canMove2Cell(cellCoord.x, cellCoord.y):
+				
+				# Перевірка на взяття фігури
+				var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
+				if target_piece != null:
+					# canMove2Cell вже перевірила, що це фігура ворога
+					removePiece(target_piece)
+					
+				# Переміщуємо фігуру
+				activePiece.placeAtCell(cellCoord.x, cellCoord.y)
+				activatePiece(null)
 			else:
-				var cellCoord = findCellAtCoords(event.position.x,event.position.y)
-				print(cellCoord)
-				#перевірити координати та можлисть здіснювати ходи
-				if activePiece.canMove2Cell(cellCoord.x, cellCoord.y):
-					activePiece.placeAtCell(cellCoord.x, cellCoord.y)
+				# Перевіримо, чи є на цій клітинці інша НАША фігура.
+				var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
+				# Якщо на клітинці є фігура, І її колір = кольору активної фігури
+				if target_piece != null and target_piece.color == activePiece.color:
+					activatePiece(target_piece)
+				else:
 					activatePiece(null)
 
 func activatePiece(p):
 	activePiece=p
 
-func findCellAtCoords(cx, cy):
-	#v = (cx-50)//60
-	#cy-550 = -60*h
-	var v = (cx-50)/60
-	var h = (550-cy)/60
-	return Vector2(round(v),round(h))
-	
-	
-func findPieceAtCoords(cx, cy):
-	var res = null
-	
-	for p in pieces:
-		var dx = cx-p.position.x
-		var dy = cy-p.position.y
-		if abs(dx)<25 and abs(dy)<25:
-			res=p;
-			break
-	
-	return res
+#func findCellAtCoords(cx, cy):
+	##v = (cx-50)//60
+	##cy-550 = -60*h
+	#var v = (cx-50)/60
+	#var h = (550-cy)/60
+	#return Vector2(round(v),round(h))
+	#
+	#
+#func findPieceAtCoords(cx, cy):
+	#var res = null
+	#
+	#for p in pieces:
+		#var dx = cx-p.position.x
+		#var dy = cy-p.position.y
+		#if abs(dx)<25 and abs(dy)<25:
+			#res=p;
+			#break
+	#
+	#return res
 
 func createPiece(tp, cl, v, h):
-	var p = preload("res://piece.tscn").instantiate()
+	var p = preload("res://scene/piece.tscn").instantiate()
 	p.init_props(0, tp, cl, v, h, self)
 	add_child(p)
 	pieces.append(p)

@@ -26,9 +26,17 @@ func init_props(id, tp, c, v, h, main_ref = null):
 func placeAtCell(v, h):
 	self.horzid=h
 	self.vertid=v
-	self.position.x = 50+60*self.vertid
-	self.position.y = 550-60*self.horzid
+	# 1. Конвертуємо шахові координати (h=0 - низ) в TileMap (y=0 - верх)
+	# Формула: tilemap_y = 7 - chess_h
+	var tilemap_coords = Vector2i(v, 7 - h)
 	
+	# 2. Використовуємо TileMap, щоб отримати ЦЕНТР клітинки в пікселях
+	if main and main.tilemapBoard:
+		self.global_position = main.tilemapBoard.to_global(main.tilemapBoard.map_to_local(tilemap_coords))
+	else:
+		print("Помилка: не можу знайти TileMap у 'main'!")
+
+
 func canMove2Cell(v,h):
 	var dx = v - vertid
 	var dy = h - horzid
