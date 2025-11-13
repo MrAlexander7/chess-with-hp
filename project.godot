@@ -12,8 +12,8 @@ config_version=5
 
 config/name="ChessWithHitpoints"
 config/version="1.0"
-run/main_scene="uid://38kbdhxbjcdf"
-config/features=PackedStringArray("4.4", "GL Compatibility")
+run/main_scene="res://scene/main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [display]
@@ -21,6 +21,10 @@ config/icon="res://icon.svg"
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=3
+
+[dotnet]
+
+project/assembly_name="ChessWithHitpoints"
 
 [rendering]
 
