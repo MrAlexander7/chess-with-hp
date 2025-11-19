@@ -1,5 +1,6 @@
 extends Node2D
 var pieces=[]
+var current_turn = 0
 
 var activePiece=null
 
@@ -53,10 +54,19 @@ func _input(event: InputEvent) -> void:
 		# Формула: chess_h = 7 - tilemap_y
 		var cellCoord = Vector2i(tilemap_coords.x, 7 - tilemap_coords.y)
 		
+		var enemy_color = 1 if current_turn == 0 else 0
+		if is_square_under_attack(cellCoord.x, cellCoord.y, enemy_color):
+			print("ОБЕРЕЖНО! Клітинка ", cellCoord, " під ударом ворога!")
+		else:
+			print("Клітинка ", cellCoord, " у безпеці.")
+		
 		if activePiece == null:
 			# Якщо фігура не активна, шукаємо фігуру на клітинці, куди клікнули
 			var p = get_piece_at(cellCoord.x, cellCoord.y)
 			if p != null:
+				if p.color != current_turn:
+					print("Зараз хід іншого гравця!")
+					return # Ігноруємо клік
 				activatePiece(p)
 		else:
 			# Якщо фігура активна, перевіряємо, чи може вона сюди піти
@@ -71,6 +81,7 @@ func _input(event: InputEvent) -> void:
 				# Переміщуємо фігуру
 				activePiece.placeAtCell(cellCoord.x, cellCoord.y)
 				activatePiece(null)
+				change_turn()
 			else:
 				# Перевіримо, чи є на цій клітинці інша НАША фігура.
 				var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
@@ -119,3 +130,20 @@ func get_piece_at(v, h):
 		if p.vertid == v and p.horzid == h:
 			return p
 	return null
+
+
+func change_turn():
+	if current_turn == 0:
+		current_turn = 1 # Тепер чорні
+		print("Хід чорних")
+	else:
+		current_turn = 0 # Тепер білі
+		print("Хід білих")
+
+
+func is_square_under_attack(v, h, enemy_color) -> bool:
+	for p in pieces:
+		if p != null and p.color == enemy_color:
+			if p.is_attacking_square(v, h):
+				return true
+	return false

@@ -120,5 +120,40 @@ func Can2MovePawn(v, h):
 	
 	return false
 
-func canAttack2Pice():
-	pass
+func is_attacking_square(target_v, target_h) -> bool:
+	var dx = target_v - vertid
+	var dy = target_h - horzid
+	
+	# Якщо це та сама клітинка, де ми стоїмо - це не атака
+	if dx == 0 and dy == 0:
+		return false
+		
+	match type:
+		0: # Король (б'є на 1 клітинку довкола)
+			return abs(dx) <= 1 and abs(dy) <= 1
+			
+		1: # Ферзь (лінії + діагоналі)
+			if abs(dx) == abs(dy) or dx == 0 or dy == 0:
+				return pathIsClear(target_v, target_h)
+			return false
+			
+		2: # Слон (тільки діагоналі)
+			if abs(dx) == abs(dy):
+				return pathIsClear(target_v, target_h)
+			return false
+			
+		3: # Кінь (Г-подібно) - йому байдуже на перешкоди
+			return (abs(dx) == 1 and abs(dy) == 2) or (abs(dx) == 2 and abs(dy) == 1)
+			
+		4: # Ладья (тільки прямі лінії)
+			if dx == 0 or dy == 0:
+				return pathIsClear(target_v, target_h)
+			return false
+			
+		5: # Пішак
+			var direction = 1 if color == 0 else -1
+			
+			if dy == direction and abs(dx) == 1:
+				return true
+			return false
+	return false
