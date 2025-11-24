@@ -47,6 +47,7 @@ func _input(event: InputEvent) -> void:
 		# 4. Перевіряємо, чи ми клікнули в межах дошки
 		if tilemap_coords.x < 0 or tilemap_coords.x > 7 or tilemap_coords.y < 0 or tilemap_coords.y > 7:
 			activatePiece(null) # Клік за межами, знімаємо виділення
+			debugLog.text = ""
 			return
 			
 		# 5. КОНВЕРТУЄМО КООРДИНАТИ TILEMAP У ШАХОВІ КООРДИНАТИ
@@ -74,17 +75,20 @@ func _input(event: InputEvent) -> void:
 		else:
 			# Якщо фігура активна, перевіряємо, чи може вона сюди піти
 			if activePiece.canMove2Cell(cellCoord.x, cellCoord.y):
-				
-				# Перевірка на взяття фігури
-				var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
-				if target_piece != null:
-					# canMove2Cell вже перевірила, що це фігура ворога
-					removePiece(target_piece)
-					
-				# Переміщуємо фігуру
-				activePiece.placeAtCell(cellCoord.x, cellCoord.y)
-				activatePiece(null)
-				change_turn()
+				if is_move_safe(activePiece, cellCoord.x, cellCoord.y):
+					# Перевірка на взяття фігури
+					var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
+					if target_piece != null:
+						# canMove2Cell вже перевірила, що це фігура ворога
+						removePiece(target_piece)
+						
+					# Переміщуємо фігуру
+					activePiece.placeAtCell(cellCoord.x, cellCoord.y)
+					activatePiece(null)
+					check_for_check_status()
+					change_turn()
+				else: 
+					debugLog.text = "Хід заборонено! Ваш Король під ударом!"
 			else:
 				# Перевіримо, чи є на цій клітинці інша НАША фігура.
 				var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
@@ -175,5 +179,17 @@ func update_debug_info(v, h):
 	info += "Під ударом Білих: %s\n" % str(attacked_by_white)
 	info += "Під ударом Чорних: %s\n" % str(attacked_by_black)
 	
-	# Виводимо текст на екран
 	debugLog.text = info
+
+
+func is_move_safe(piece, target_v, target_h) -> bool:
+	return true
+
+func find_king_coords(c) -> Vector2i:
+	for p in pieces:
+		if p.type == 0 and p.color == c: # 0 - це ID Короля
+			return Vector2i(p.vertid, p.horzid)
+	return Vector2i(0,0) # На випадок помилки
+
+func check_for_check_status():
+	pass
