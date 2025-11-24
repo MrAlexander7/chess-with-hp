@@ -4,6 +4,7 @@ var current_turn = 0
 
 var activePiece=null
 
+@onready var debugLog = $DebugLog
 @onready var tilemapBoard = $Board
 
 func _ready() -> void:
@@ -54,18 +55,20 @@ func _input(event: InputEvent) -> void:
 		# Формула: chess_h = 7 - tilemap_y
 		var cellCoord = Vector2i(tilemap_coords.x, 7 - tilemap_coords.y)
 		
-		var enemy_color = 1 if current_turn == 0 else 0
-		if is_square_under_attack(cellCoord.x, cellCoord.y, enemy_color):
-			print("ОБЕРЕЖНО! Клітинка ", cellCoord, " під ударом ворога!")
-		else:
-			print("Клітинка ", cellCoord, " у безпеці.")
+		update_debug_info(cellCoord.x, cellCoord.y)
+		
+		#var enemy_color = 1 if current_turn == 0 else 0
+		#if is_square_under_attack(cellCoord.x, cellCoord.y, enemy_color):
+			#print("ОБЕРЕЖНО! Клітинка ", cellCoord, " під ударом ворога!")
+		#else:
+			#print("Клітинка ", cellCoord, " у безпеці.")
 		
 		if activePiece == null:
 			# Якщо фігура не активна, шукаємо фігуру на клітинці, куди клікнули
 			var p = get_piece_at(cellCoord.x, cellCoord.y)
 			if p != null:
 				if p.color != current_turn:
-					print("Зараз хід іншого гравця!")
+					debugLog.text = "Зараз хід іншого гравця!"
 					return # Ігноруємо клік
 				activatePiece(p)
 		else:
@@ -135,10 +138,10 @@ func get_piece_at(v, h):
 func change_turn():
 	if current_turn == 0:
 		current_turn = 1 # Тепер чорні
-		print("Хід чорних")
+		debugLog.text = "Хід чорних"
 	else:
 		current_turn = 0 # Тепер білі
-		print("Хід білих")
+		debugLog.text = "Хід білих"
 
 
 func is_square_under_attack(v, h, enemy_color) -> bool:
@@ -147,3 +150,30 @@ func is_square_under_attack(v, h, enemy_color) -> bool:
 			if p.is_attacking_square(v, h):
 				return true
 	return false
+
+
+func update_debug_info(v, h):
+	var info = "Клітинка: (%d, %d)\n" % [v, h]
+	
+	# Хто стоїть на клітинці?
+	var p = get_piece_at(v, h)
+	if p:
+		var color_name = "Білий" if p.color == 0 else "Чорний"
+		var type_names = ["Король", "Ферзь", "Слон", "Кінь", "Тура", "Пішак"]
+		info += "Фігура: %s %s\n" % [color_name, type_names[p.type]]
+	else:
+		info += "Фігура: Пусто\n"
+	
+	info += "-----------------\n"
+	
+	# ХТО АТАКУЄ ЦЮ КЛІТИНКУ?
+	# Перевіряємо, чи атакують цю клітинку БІЛІ (color 0)
+	var attacked_by_white = is_square_under_attack(v, h, 0)
+	# Перевіряємо, чи атакують цю клітинку ЧОРНІ (color 1)
+	var attacked_by_black = is_square_under_attack(v, h, 1)
+	
+	info += "Під ударом Білих: %s\n" % str(attacked_by_white)
+	info += "Під ударом Чорних: %s\n" % str(attacked_by_black)
+	
+	# Виводимо текст на екран
+	debugLog.text = info
