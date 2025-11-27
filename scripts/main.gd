@@ -146,6 +146,7 @@ func change_turn():
 	else:
 		current_turn = 0 # Тепер білі
 		debugLog.text = "Хід білих"
+	check_game_over_status()
 
 
 func is_square_under_attack(v, h, enemy_color) -> bool:
@@ -183,7 +184,34 @@ func update_debug_info(v, h):
 
 
 func is_move_safe(piece, target_v, target_h) -> bool:
-	return true
+	#Запам'ятаєм де хто
+	var old_v = piece.vertid
+	var old_h = piece.horzid
+	var target_piece = get_piece_at(target_v, target_h)
+	
+	#Зробимо віртуальний хід
+	piece.vertid = target_v
+	piece.horzid = target_h
+	
+	#У разі наявності фігури там тимчасово ховаєм
+	if target_piece:
+		target_piece.vertid = -100
+		target_piece.horzid = -100
+	
+	#Пошук кординат нашого короля
+	var king_coords = find_king_coords(piece.color)
+	
+	#Перевірка на атаку короля
+	var enemy_color = 1 if piece.color == 0 else 0
+	var safe = ! is_square_under_attack(king_coords.x,king_coords.y,enemy_color)
+	
+	#Повертаєм назад
+	piece.vertid = old_v
+	piece.horzid = old_h
+	if target_piece:
+		target_piece.vertid = target_v
+		target_piece.horzid = target_h
+	return safe
 
 func find_king_coords(c) -> Vector2i:
 	for p in pieces:
@@ -192,4 +220,55 @@ func find_king_coords(c) -> Vector2i:
 	return Vector2i(0,0) # На випадок помилки
 
 func check_for_check_status():
-	pass
+	reset_kings_color()
+	
+	#Перевірка Білого короля на атаку чорними
+	var w_king_pos = find_king_coords(0)
+	if is_square_under_attack(w_king_pos.x, w_king_pos.y, 1):
+		debugLog.text = "Шах Білому королю"
+		highlight_king(0,Color.RED)
+	
+	#Перевірка Чорного короля на атаку білими
+	var b_king_pos = find_king_coords(1)
+	if is_square_under_attack(b_king_pos.x, b_king_pos.y, 0):
+		debugLog.text = "Шах Чорному королю"
+		highlight_king(1,Color.RED)
+
+func highlight_king(k_color, color_modulate):
+	for p in pieces:
+		if p.type == 0 and p.color == k_color:
+			p.get_node("Sprite2D").modulate = color_modulate
+
+func reset_kings_color():
+	highlight_king(0, Color.WHITE)
+	highlight_king(1, Color.WHITE)
+
+
+func has_any_valid_moves(player_color):
+	for p in pieces:
+		if p != null and p.color == player_color:
+			for x in range(8):
+				for y in range(8):
+					if p.canMove2Cell(x,y):
+						if is_move_safe(p,x,y):
+							return true
+	return false
+
+func check_game_over_status():
+	var king_pos = find_king_coords(current_turn)
+	var enemy_color = 1 if current_turn == 0 else 0
+	var is_in_check = is_square_under_attack(king_pos.x, king_pos.y, enemy_color)
+	var can_move = has_any_valid_moves(current_turn)
+	
+	if is_in_check and ! can_move:
+		debugLog.text = "Мат гра закінченна"
+		restart_game()
+	
+	elif ! is_in_check and ! can_move:
+		debugLog.text = "Пат нічия"
+		restart_game()
+
+func restart_game():
+	debugLog.text = "Перезагрузка гри через 5 секунд"
+	await get_tree().create_timer(5.0).timeout
+	get_tree().reload_current_scene()
