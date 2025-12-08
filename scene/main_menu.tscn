@@ -1,0 +1,104 @@
+[gd_scene load_steps=6 format=3 uid="uid://clkaghb22k0u"]
+
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_fb43i"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_op581"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b2r71"]
+bg_color = Color(0.513233, 0.513233, 0.513233, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.466667)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rqiun"]
+bg_color = Color(0.513726, 0.513726, 0.513726, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.466667)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8366x"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.466667)
+shadow_size = 10
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fb43i")
+
+[node name="Button_Manager" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -128.5
+offset_right = 250.0
+offset_bottom = 128.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="Main_Menu_Play" type="Button" parent="Button_Manager"]
+layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 7
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 48
+theme_override_styles/focus = SubResource("StyleBoxEmpty_op581")
+theme_override_styles/hover = SubResource("StyleBoxFlat_b2r71")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rqiun")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
+text = "Main_Menu_Play"
+
+[node name="Main_Menu_Exit" type="Button" parent="Button_Manager"]
+layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 7
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 48
+theme_override_styles/focus = SubResource("StyleBoxEmpty_op581")
+theme_override_styles/hover = SubResource("StyleBoxFlat_b2r71")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rqiun")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
+text = "Main_Menu_Exit"
+
+[node name="Game_Name" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -121.0
+offset_top = 119.0
+offset_right = 122.0
+offset_bottom = 186.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 72
+text = "RPG Chess"
+
+[connection signal="pressed" from="Button_Manager/Main_Menu_Play" to="." method="_on_main_menu_play_pressed"]
+[connection signal="pressed" from="Button_Manager/Main_Menu_Exit" to="." method="_on_main_menu_exit_pressed"]

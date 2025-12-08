@@ -6,6 +6,7 @@ var activePiece=null
 
 @onready var debugLog = $DebugLog
 @onready var tilemapBoard = $Board
+@onready var pause_menu = $PauseLayer
 
 func _ready() -> void:
 	#createPiece(0,0,4,0)
@@ -76,12 +77,29 @@ func _input(event: InputEvent) -> void:
 			# Якщо фігура активна, перевіряємо, чи може вона сюди піти
 			if activePiece.canMove2Cell(cellCoord.x, cellCoord.y):
 				if is_move_safe(activePiece, cellCoord.x, cellCoord.y):
-					# Перевірка на взяття фігури
+					
+					var is_castling_move = false
+					if activePiece.type == 0 and abs(cellCoord.x - activePiece.vertid) == 2:
+						
+						if can_castle_safely(activePiece, cellCoord.x, cellCoord.y):
+							is_castling_move = true
+							
+							var rook_x = 7 if (cellCoord.x - activePiece.vertid) > 0 else 0
+							var rook = get_piece_at(rook_x, activePiece.horzid)
+							if rook:
+								var new_rook_x = 5 if rook_x == 7 else 3
+								rook.placeAtCell(new_rook_x, activePiece.horzid)
+						else:
+							debugLog.text("Рокировка заборонена правилами!")
+							activePiece.placeAtCell(activePiece.vertid, activePiece.horzid)
+							activatePiece(null)
+							return
+							# Перевірка на взяття фігури
 					var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
 					if target_piece != null:
 						# canMove2Cell вже перевірила, що це фігура ворога
 						removePiece(target_piece)
-						
+					
 					# Переміщуємо фігуру
 					activePiece.placeAtCell(cellCoord.x, cellCoord.y)
 					activatePiece(null)
@@ -272,3 +290,38 @@ func restart_game():
 	debugLog.text = "Перезагрузка гри через 5 секунд"
 	await get_tree().create_timer(5.0).timeout
 	get_tree().reload_current_scene()
+
+func can_castle_safely(king_piece, target_v, target_h) -> bool:
+	var enemy_color = 1 if king_piece.color == 0 else 0
+	
+	if is_square_under_attack(king_piece.vertid, king_piece.horzid, enemy_color):
+		debugLog.text = "Рокировка неможлива: Королю Шах!"
+		return false
+	
+	var direction = 1 if target_v > king_piece.vertid else -1
+	var middle_v = king_piece.vertid + direction
+	
+	if is_square_under_attack(king_piece.vertid, king_piece.horzid, enemy_color):
+		debugLog.text = "Рокировка неможлива: Проміжна клітинка під ударом!"
+		return false
+	
+	return true
+
+func _unhandled_input(event):
+	if event.is_action_pressed("ui_cancel"): # За замовчуванням це ESC
+		toggle_pause()
+
+func toggle_pause():
+	var is_paused = not get_tree().paused
+	get_tree().paused = is_paused # Ставимо двигун на паузу/знімаємо
+	pause_menu.visible = is_paused # Показуємо/ховаємо меню
+
+func _on_main_resume_pressed() -> void:
+	toggle_pause()
+	pass # Replace with function body.
+
+
+func _on_main_exit_pressed() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scene/main_menu.tscn")
+	pass # Replace with function body.

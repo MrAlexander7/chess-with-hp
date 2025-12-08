@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=4 uid="uid://38kbdhxbjcdf"]
+[gd_scene load_steps=14 format=4 uid="uid://38kbdhxbjcdf"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_v0l8b"]
 [ext_resource type="Texture2D" uid="uid://du7753iufxapy" path="res://img/Gray_Cell.png" id="2_k5irf"]
@@ -23,6 +23,53 @@ sources/1 = SubResource("TileSetAtlasSource_hlytr")
 font_size = 24
 font_color = Color(1, 1, 0, 1)
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_58hvh"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fv2tt"]
+bg_color = Color(0.513233, 0.513233, 0.513233, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.466667)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_riqp1"]
+bg_color = Color(0.513233, 0.513233, 0.513233, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.466667)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4ht4n"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.466667)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_677qx"]
+bg_color = Color(0.513233, 0.513233, 0.513233, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.466667)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gve4v"]
+bg_color = Color(0.513233, 0.513233, 0.513233, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.466667)
+shadow_size = 10
+
 [node name="Main" type="Node2D"]
 script = ExtResource("1_v0l8b")
 
@@ -37,3 +84,69 @@ offset_right = 245.0
 offset_bottom = 1078.0
 text = "Debug info..."
 label_settings = SubResource("LabelSettings_a0guj")
+
+[node name="PauseLayer" type="CanvasLayer" parent="."]
+process_mode = 3
+visible = false
+
+[node name="Control" type="Control" parent="PauseLayer"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ColorRect" type="ColorRect" parent="PauseLayer/Control"]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1076.0
+color = Color(0.180392, 0.180392, 0.180392, 0.513726)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PauseLayer/Control"]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 690.0
+offset_top = 412.0
+offset_right = 1190.0
+offset_bottom = 562.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="Main_Resume" type="Button" parent="PauseLayer/Control/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 48
+theme_override_styles/focus = SubResource("StyleBoxEmpty_58hvh")
+theme_override_styles/hover = SubResource("StyleBoxFlat_fv2tt")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_riqp1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_4ht4n")
+text = "Main_Resume"
+
+[node name="Main_Exit" type="Button" parent="PauseLayer/Control/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 5
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 48
+theme_override_styles/focus = SubResource("StyleBoxEmpty_58hvh")
+theme_override_styles/hover = SubResource("StyleBoxFlat_677qx")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_gve4v")
+theme_override_styles/normal = SubResource("StyleBoxFlat_4ht4n")
+text = "Main_Exit
+"
+
+[connection signal="pressed" from="PauseLayer/Control/VBoxContainer/Main_Resume" to="." method="_on_main_resume_pressed"]
+[connection signal="pressed" from="PauseLayer/Control/VBoxContainer/Main_Exit" to="." method="_on_main_exit_pressed"]

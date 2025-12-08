@@ -11,6 +11,7 @@ var type=0
 var horzid=0
 var vertid=0
 var color=0
+var moved = false
 
 func _ready() -> void:
 	pass
@@ -22,6 +23,7 @@ func init_props(id, tp, c, v, h, main_ref = null):
 	self.main = main_ref
 	$Sprite2D.frame=self.type+self.color*6
 	placeAtCell(v,h)
+	moved = false
 	
 func placeAtCell(v, h):
 	self.horzid=h
@@ -35,6 +37,8 @@ func placeAtCell(v, h):
 		self.global_position = main.tilemapBoard.to_global(main.tilemapBoard.map_to_local(tilemap_coords))
 	else:
 		print("Помилка: не можу знайти TileMap у 'main'!")
+	
+	moved = true
 
 
 func canMove2Cell(v,h):
@@ -52,7 +56,14 @@ func canMove2Cell(v,h):
 	
 	match type:
 		0: # Король
-			return abs(dx) <= 1 and abs(dy) <= 1
+			if abs(dx) <= 1 and abs(dy) <= 1:
+				return true
+			if abs(dx) == 2 and dy == 0 and !moved:
+				var rook_x = 7 if dx > 0 else 0
+				var rook = main.get_piece_at(rook_x, horzid)
+				if rook != null and rook.type == 4 and rook.color == color and !rook.moved:
+					return pathIsClear(rook_x, horzid)
+			return false
 		1: # Ферзь
 			if abs(dx) == abs(dy) or dx == 0 or dy == 0:
 				return pathIsClear(v, h)
