@@ -11,7 +11,9 @@ var activePiece=null
 func _ready() -> void:
 	#createPiece(0,0,4,0)
 	#createPiece(0,1,4,7)
-	parseChessString("rnbqkbnr/pppppppp/________/________/________/________/PPPPPPPP/RNBQKBNR")
+	#parseChessString("rnbqkbnr/pppppppp/________/________/________/________/PPPPPPPP/RNBQKBNR")
+	#parseChessString("___r____/ppp__kp_/_____n__/____p___/_PP_P__P/__K_Pb__/P_______/_____R__")
+	parseChessString("KR_____q/________/________/________/________/________/________/_____k__")
 	pass
 
 func parseChessString(s):
@@ -286,9 +288,9 @@ func check_game_over_status():
 		debugLog.text = "Пат нічия"
 		restart_game()
 
-func restart_game():
+func restart_game(t = 5.0):
 	debugLog.text = "Перезагрузка гри через 5 секунд"
-	await get_tree().create_timer(5.0).timeout
+	await get_tree().create_timer(t).timeout
 	get_tree().reload_current_scene()
 
 func can_castle_safely(king_piece, target_v, target_h) -> bool:
@@ -324,4 +326,9 @@ func _on_main_resume_pressed() -> void:
 func _on_main_exit_pressed() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scene/main_menu.tscn")
+	pass # Replace with function body.
+
+
+func _on_button_pressed() -> void:
+	restart_game(0.5)
 	pass # Replace with function body.

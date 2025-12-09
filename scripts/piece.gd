@@ -71,7 +71,7 @@ func canMove2Cell(v,h):
 		2: # Слон
 			if abs(dx) != abs(dy):
 				return false
-			return pathIsClear(v, h)
+			return pathIsClear(v, h) and abs(dx) <= 8 and abs(dy) <= 8
 		3: # Конь
 			return (abs(dx) == 1 and abs(dy) == 2) or (abs(dx) == 2 and abs(dy) == 1)
 		4: # Ладья
@@ -134,6 +134,10 @@ func Can2MovePawn(v, h):
 func is_attacking_square(target_v, target_h) -> bool:
 	var dx = target_v - vertid
 	var dy = target_h - horzid
+	
+	if vertid < 0 or horzid < 0:
+		return false
+
 	
 	# Якщо це та сама клітинка, де ми стоїмо - це не атака
 	if dx == 0 and dy == 0:
