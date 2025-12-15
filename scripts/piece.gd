@@ -6,6 +6,7 @@ var hp=1
 var attack=1
 var defence=1
 
+var sybol:String = ""
 var id=0
 var type=0
 var horzid=0
@@ -15,6 +16,9 @@ var moved = false
 
 func _ready() -> void:
 	pass
+
+func _to_string() -> String:
+	return self.sybol + "abcdefgh"[vertid] + str(horzid + 1)
 
 func init_props(id, tp, c, v, h, main_ref = null):
 	self.id=id

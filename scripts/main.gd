@@ -2,8 +2,9 @@ extends Node2D
 var pieces=[]
 var current_turn = 0
 
-var activePiece=null
 
+var activePiece=null
+var b = false
 @onready var debugLog = $DebugLog
 @onready var tilemapBoard = $Board
 @onready var pause_menu = $PauseLayer
@@ -11,9 +12,9 @@ var activePiece=null
 func _ready() -> void:
 	#createPiece(0,0,4,0)
 	#createPiece(0,1,4,7)
-	#parseChessString("rnbqkbnr/pppppppp/________/________/________/________/PPPPPPPP/RNBQKBNR")
+	parseChessString("rnbqkbnr/pppppppp/________/________/________/________/PPPPPPPP/RNBQKBNR")
 	#parseChessString("___r____/ppp__kp_/_____n__/____p___/_PP_P__P/__K_Pb__/P_______/_____R__")
-	parseChessString("KR_____q/________/________/________/________/________/________/_____k__")
+	#parseChessString("KR_____q/________/________/________/________/________/________/_____k__")
 	pass
 
 func parseChessString(s):
@@ -25,11 +26,11 @@ func parseChessString(s):
 		if c!="/":
 			if c in allTypes:
 				var id = allTypes.find(c)
-				createPiece(id,0,v,h)
+				createPiece(id,0,v,h).sybol = c
 			else:
 				if c.to_upper() in allTypes:
 					var id = allTypes.find(c.to_upper())
-					createPiece(id,1,v,h)			
+					createPiece(id,1,v,h).sybol = c
 			v+=1
 			if v>7:
 				v=0
@@ -146,6 +147,7 @@ func createPiece(tp, cl, v, h):
 	p.init_props(0, tp, cl, v, h, self)
 	add_child(p)
 	pieces.append(p)
+	return p
 	
 func removePiece(p):
 	p.queue_free()
@@ -159,7 +161,14 @@ func get_piece_at(v, h):
 	return null
 
 
-func change_turn():
+func change_turn(b = false):
+	if b == true:
+		current_turn = 1 # Тепер чорні
+		debugLog.text = "Хід чорних"
+	else:
+		current_turn = 0 # Тепер білі
+		debugLog.text = "Хід білих"
+		
 	if current_turn == 0:
 		current_turn = 1 # Тепер чорні
 		debugLog.text = "Хід чорних"
@@ -204,6 +213,9 @@ func update_debug_info(v, h):
 
 
 func is_move_safe(piece, target_v, target_h) -> bool:
+	if target_v == piece.vertid and target_h == piece.horzid:
+		return false
+	
 	#Запам'ятаєм де хто
 	var old_v = piece.vertid
 	var old_h = piece.horzid
@@ -331,4 +343,30 @@ func _on_main_exit_pressed() -> void:
 
 func _on_button_pressed() -> void:
 	restart_game(0.5)
+	pass # Replace with function body.
+
+
+func _on_ai_move_pressed() -> void:
+	var posible_move = [];
+	b = true
+	for p in pieces:
+		if p.color == current_turn:
+			for v in range(8):
+				for h in range(8):
+					if p.canMove2Cell(v,h):
+						if is_move_safe(p,v,h):
+							posible_move.append({"p": p, "v": v, "h": h})
+	debugLog.text = str(len(posible_move))
+	#print(posible_move)
+	var move = posible_move.pick_random()
+	
+	var target_piece = get_piece_at(move.v, move.h)
+	if target_piece != null:
+		# canMove2Cell вже перевірила, що це фігура ворога
+		removePiece(target_piece)
+	
+	move.p.placeAtCell(move.v, move.h)
+	activatePiece(null)
+	check_for_check_status()
+	change_turn()
 	pass # Replace with function body.
