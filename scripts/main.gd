@@ -99,15 +99,40 @@ func _input(event: InputEvent) -> void:
 							return
 							# Перевірка на взяття фігури
 					var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
+					var combat_result_death = false
 					if target_piece != null:
-						# canMove2Cell вже перевірила, що це фігура ворога
-						removePiece(target_piece)
+						if target_piece.color != activePiece.color:
+							debugLog.text = "Атака"
+							if target_piece.moved and :
+								debugLog.text = "Атака по захисту"
+								target_piece.take_attack(activePiece.attack, "ARMOR")
+								activePiece.moved = true
+								#update_ui_stacks()
+								check_game_over_status()
+								change_turn()
+								activatePiece(null)
+								return
+						else:
+							combat_result_death = target_piece.take_attack(activePiece.attack, "HP")
+							if combat_result_death:
+								debugLog.text = "Ворог знищений! Займаємо місце"
+								removePiece(target_piece)
+							else:
+								debugLog.text = "Ворог живий, але ранений!"
+								activePiece.moved = true
+								#update_ui_stacks()
+								change_turn()
+								activatePiece(null)
+								return
 					
 					# Переміщуємо фігуру
 					activePiece.placeAtCell(cellCoord.x, cellCoord.y)
-					activatePiece(null)
-					check_for_check_status()
+					activePiece.moved = true
+					#update_ui_stacks()
+					check_for_check_status() 
+					check_game_over_status()
 					change_turn()
+					activatePiece(null)
 				else: 
 					debugLog.text = "Хід заборонено! Ваш Король під ударом!"
 			else:
@@ -382,7 +407,6 @@ func _on_timer_up_pressed() -> void:
 func _on_timer_down_pressed() -> void:
 	$Timer.wait_time *= 2
 	pass # Replace with function body.
-
 
 func check_draw():
 	#for p in pieces:

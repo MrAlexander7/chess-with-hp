@@ -98,7 +98,7 @@ offset_right = 122.0
 offset_bottom = 186.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 72
-text = "RPG Chess"
+text = "D&D Chess"
 
 [connection signal="pressed" from="Button_Manager/Main_Menu_Play" to="." method="_on_main_menu_play_pressed"]
 [connection signal="pressed" from="Button_Manager/Main_Menu_Exit" to="." method="_on_main_menu_exit_pressed"]
