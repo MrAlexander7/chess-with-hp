@@ -159,7 +159,28 @@ offset_right = 111.0
 offset_bottom = 137.0
 text = "AIMove"
 
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.5
+autostart = true
+
+[node name="TimerUp" type="Button" parent="."]
+offset_top = 161.0
+offset_right = 111.0
+offset_bottom = 209.0
+text = "Up
+"
+
+[node name="TimerDown" type="Button" parent="."]
+offset_top = 216.0
+offset_right = 111.0
+offset_bottom = 264.0
+text = "Down
+"
+
 [connection signal="pressed" from="PauseLayer/Control/VBoxContainer/Main_Resume" to="." method="_on_main_resume_pressed"]
 [connection signal="pressed" from="PauseLayer/Control/VBoxContainer/Main_Exit" to="." method="_on_main_exit_pressed"]
 [connection signal="pressed" from="Rest" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="AIMove" to="." method="_on_ai_move_pressed"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
+[connection signal="pressed" from="TimerUp" to="." method="_on_timer_up_pressed"]
+[connection signal="pressed" from="TimerDown" to="." method="_on_timer_down_pressed"]

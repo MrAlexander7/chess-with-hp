@@ -14,7 +14,7 @@ func _ready() -> void:
 	#createPiece(0,1,4,7)
 	parseChessString("rnbqkbnr/pppppppp/________/________/________/________/PPPPPPPP/RNBQKBNR")
 	#parseChessString("___r____/ppp__kp_/_____n__/____p___/_PP_P__P/__K_Pb__/P_______/_____R__")
-	#parseChessString("KR_____q/________/________/________/________/________/________/_____k__")
+	#parseChessString("________/P_______/________/________/________/________/________/K____k__")
 	pass
 
 func parseChessString(s):
@@ -161,14 +161,8 @@ func get_piece_at(v, h):
 	return null
 
 
+
 func change_turn(b = false):
-	if b == true:
-		current_turn = 1 # Тепер чорні
-		debugLog.text = "Хід чорних"
-	else:
-		current_turn = 0 # Тепер білі
-		debugLog.text = "Хід білих"
-		
 	if current_turn == 0:
 		current_turn = 1 # Тепер чорні
 		debugLog.text = "Хід чорних"
@@ -358,15 +352,41 @@ func _on_ai_move_pressed() -> void:
 							posible_move.append({"p": p, "v": v, "h": h})
 	debugLog.text = str(len(posible_move))
 	#print(posible_move)
+	if len(posible_move) == 0:
+		return
+	
 	var move = posible_move.pick_random()
 	
 	var target_piece = get_piece_at(move.v, move.h)
 	if target_piece != null:
-		# canMove2Cell вже перевірила, що це фігура ворога
 		removePiece(target_piece)
 	
 	move.p.placeAtCell(move.v, move.h)
 	activatePiece(null)
 	check_for_check_status()
-	change_turn()
+	check_draw()
+	change_turn(b)
 	pass # Replace with function body.
+
+
+func _on_timer_timeout() -> void:
+	_on_ai_move_pressed()
+	pass # Replace with function body.
+
+
+func _on_timer_up_pressed() -> void:
+	$Timer.wait_time /= 2
+	pass # Replace with function body.
+
+
+func _on_timer_down_pressed() -> void:
+	$Timer.wait_time *= 2
+	pass # Replace with function body.
+
+
+func check_draw():
+	#for p in pieces:
+	if len(pieces) == 2:
+		debugLog.text = "draw"
+		restart_game()
+	pass

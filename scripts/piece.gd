@@ -43,6 +43,17 @@ func placeAtCell(v, h):
 		print("Помилка: не можу знайти TileMap у 'main'!")
 	
 	moved = true
+	if self.type == 5:
+		if self.color == 0:
+			if self.horzid == 7:
+				self.type = 1
+				$Sprite2D.frame=self.type+self.color*6
+				self.sybol = "Q"
+		else:
+			if self.horzid == 0:
+				self.type = 1
+				$Sprite2D.frame=self.type+self.color*6
+				self.sybol = "q"
 
 
 func canMove2Cell(v,h):
