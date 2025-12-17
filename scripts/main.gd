@@ -1,5 +1,6 @@
 extends Node2D
 var pieces=[]
+var move_history = []
 var current_turn = 0
 
 
@@ -79,6 +80,10 @@ func _input(event: InputEvent) -> void:
 		else:
 			# Якщо фігура активна, перевіряємо, чи може вона сюди піти
 			if activePiece.canMove2Cell(cellCoord.x, cellCoord.y):
+				
+				var start_x = activePiece.vertid
+				var start_y = activePiece.horzid
+				
 				if is_move_safe(activePiece, cellCoord.x, cellCoord.y):
 					
 					var is_castling_move = false
@@ -99,40 +104,44 @@ func _input(event: InputEvent) -> void:
 							return
 							# Перевірка на взяття фігури
 					var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
+					var turn_ended = false
 					var combat_result_death = false
+					
 					if target_piece != null:
 						if target_piece.color != activePiece.color:
 							debugLog.text = "Атака"
-							if target_piece.moved and :
+							if target_piece.moved:
 								debugLog.text = "Атака по захисту"
 								target_piece.take_attack(activePiece.attack, "ARMOR")
-								activePiece.moved = true
-								#update_ui_stacks()
-								check_game_over_status()
-								change_turn()
-								activatePiece(null)
-								return
-						else:
-							combat_result_death = target_piece.take_attack(activePiece.attack, "HP")
-							if combat_result_death:
-								debugLog.text = "Ворог знищений! Займаємо місце"
-								removePiece(target_piece)
+								activePiece.placeAtCell(start_x, start_y)
+								record_move(activePiece, start_x, start_y, cellCoord.x, cellCoord.y, "attack_armor", target_piece)
+								turn_ended = true
 							else:
-								debugLog.text = "Ворог живий, але ранений!"
-								activePiece.moved = true
-								#update_ui_stacks()
-								change_turn()
-								activatePiece(null)
-								return
-					
-					# Переміщуємо фігуру
-					activePiece.placeAtCell(cellCoord.x, cellCoord.y)
-					activePiece.moved = true
-					#update_ui_stacks()
-					check_for_check_status() 
-					check_game_over_status()
-					change_turn()
-					activatePiece(null)
+								combat_result_death = target_piece.take_attack(activePiece.attack, "HP")
+								if combat_result_death:
+									debugLog.text = "Ворог знищений! Займаємо місце"
+									record_move(activePiece, start_x, start_y, cellCoord.x, cellCoord.y, "kill", target_piece)
+									removePiece(target_piece)
+									activePiece.placeAtCell(cellCoord.x, cellCoord.y)
+									turn_ended = true
+								else:
+									debugLog.text = "Ворог живий, але ранений!"
+									activePiece.placeAtCell(start_x, start_y)
+									record_move(activePiece, start_x, start_y, cellCoord.x, cellCoord.y, "attack_fail", target_piece)
+									turn_ended = true
+						elif target_piece == null:
+							activePiece.placeAtCell(cellCoord.x, cellCoord.y)
+							#await handle_pawn_promotion(activePiece)
+							record_move(activePiece, start_x, start_y, cellCoord.x, cellCoord.y, "move")
+							turn_ended = true
+						if turn_ended:
+							activePiece.moved = true 
+							#update_ui_stacks()
+							#update_info_panel(activePiece)
+							check_for_check_status() 
+							check_game_over_status()
+							change_turn()
+							activatePiece(null)
 				else: 
 					debugLog.text = "Хід заборонено! Ваш Король під ударом!"
 			else:
@@ -414,3 +423,16 @@ func check_draw():
 		debugLog.text = "draw"
 		restart_game()
 	pass
+
+func record_move(piece, from_v, from_h, to_v, to_h, action_type, target_piece = null):
+	var entry = {
+		"turn_number": move_history.size + 1,
+		"color": piece.color,
+		"piece_type": piece.type,
+		"from": Vector2i(from_v, from_h),
+		"to": Vector2i(to_v, to_h),
+		"action": action_type,
+		"target_type": target_piece.type if target_piece else -1
+	}
+	move_history.append(entry)
+	debugLog.text = "Історія: %s" % entry
