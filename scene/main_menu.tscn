@@ -69,7 +69,23 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_op581")
 theme_override_styles/hover = SubResource("StyleBoxFlat_b2r71")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_rqiun")
 theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
-text = "Main_Menu_Play"
+text = "Play"
+
+[node name="Main_Menu_BotvsBot" type="Button" parent="Button_Manager"]
+layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 7
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 48
+theme_override_styles/focus = SubResource("StyleBoxEmpty_op581")
+theme_override_styles/hover = SubResource("StyleBoxFlat_b2r71")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rqiun")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
+text = "Bot vs Bot"
 
 [node name="Main_Menu_Exit" type="Button" parent="Button_Manager"]
 layout_mode = 2
@@ -85,7 +101,7 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_op581")
 theme_override_styles/hover = SubResource("StyleBoxFlat_b2r71")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_rqiun")
 theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
-text = "Main_Menu_Exit"
+text = "Exit"
 
 [node name="Game_Name" type="Label" parent="."]
 layout_mode = 1
@@ -101,4 +117,5 @@ theme_override_font_sizes/font_size = 72
 text = "D&D Chess"
 
 [connection signal="pressed" from="Button_Manager/Main_Menu_Play" to="." method="_on_main_menu_play_pressed"]
+[connection signal="pressed" from="Button_Manager/Main_Menu_BotvsBot" to="." method="_on_main_menu_botvs_bot_pressed"]
 [connection signal="pressed" from="Button_Manager/Main_Menu_Exit" to="." method="_on_main_menu_exit_pressed"]

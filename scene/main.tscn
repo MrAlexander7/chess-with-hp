@@ -160,7 +160,6 @@ offset_bottom = 137.0
 text = "AIMove"
 
 [node name="Timer" type="Timer" parent="."]
-wait_time = 0.5
 
 [node name="TimerUp" type="Button" parent="."]
 offset_top = 161.0
@@ -175,6 +174,34 @@ offset_right = 111.0
 offset_bottom = 264.0
 text = "Down
 "
+
+[node name="PromotionLayer" type="CanvasLayer" parent="."]
+
+[node name="PromotionMenu" type="PanelContainer" parent="PromotionLayer"]
+visible = false
+offset_left = 191.0
+offset_right = 235.0
+offset_bottom = 40.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PromotionLayer/PromotionMenu"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="QueenBtn" type="Button" parent="PromotionLayer/PromotionMenu/HBoxContainer"]
+layout_mode = 2
+text = "Queen"
+
+[node name="RookBtn" type="Button" parent="PromotionLayer/PromotionMenu/HBoxContainer"]
+layout_mode = 2
+text = "Rock"
+
+[node name="BishopBtn" type="Button" parent="PromotionLayer/PromotionMenu/HBoxContainer"]
+layout_mode = 2
+text = "Bishop"
+
+[node name="KnightBtn" type="Button" parent="PromotionLayer/PromotionMenu/HBoxContainer"]
+layout_mode = 2
+text = "Knight"
 
 [connection signal="pressed" from="PauseLayer/Control/VBoxContainer/Main_Resume" to="." method="_on_main_resume_pressed"]
 [connection signal="pressed" from="PauseLayer/Control/VBoxContainer/Main_Exit" to="." method="_on_main_exit_pressed"]
