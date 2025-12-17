@@ -1,8 +1,9 @@
-[gd_scene load_steps=14 format=4 uid="uid://38kbdhxbjcdf"]
+[gd_scene load_steps=17 format=4 uid="uid://38kbdhxbjcdf"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_v0l8b"]
 [ext_resource type="Texture2D" uid="uid://du7753iufxapy" path="res://img/Gray_Cell.png" id="2_k5irf"]
 [ext_resource type="Texture2D" uid="uid://lrgff6yw02nw" path="res://img/White_Cell.png" id="2_wp4xf"]
+[ext_resource type="Texture2D" uid="uid://3a08vnfpifd8" path="res://img/Green_Cell.png" id="4_dja75"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_e1tyb"]
 texture = ExtResource("2_k5irf")
@@ -18,6 +19,15 @@ texture_region_size = Vector2i(67, 67)
 tile_size = Vector2i(67, 67)
 sources/0 = SubResource("TileSetAtlasSource_e1tyb")
 sources/1 = SubResource("TileSetAtlasSource_hlytr")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_g2gbg"]
+texture = ExtResource("4_dja75")
+texture_region_size = Vector2i(67, 67)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_67vll"]
+tile_size = Vector2i(67, 67)
+sources/0 = SubResource("TileSetAtlasSource_g2gbg")
 
 [sub_resource type="LabelSettings" id="LabelSettings_a0guj"]
 font_size = 24
@@ -78,7 +88,12 @@ position = Vector2(680, 260)
 tile_map_data = PackedByteArray("AAAAAAAAAQAAAAAAAAAAAAIAAQAAAAAAAAAAAAQAAQAAAAAAAAAAAAYAAQAAAAAAAAABAAEAAQAAAAAAAAABAAMAAQAAAAAAAAABAAUAAQAAAAAAAAABAAcAAQAAAAAAAAACAAAAAQAAAAAAAAACAAIAAQAAAAAAAAACAAQAAQAAAAAAAAACAAYAAQAAAAAAAAADAAEAAQAAAAAAAAADAAMAAQAAAAAAAAADAAUAAQAAAAAAAAADAAcAAQAAAAAAAAAEAAAAAQAAAAAAAAAEAAIAAQAAAAAAAAAEAAQAAQAAAAAAAAAEAAYAAQAAAAAAAAAFAAEAAQAAAAAAAAAFAAMAAQAAAAAAAAAFAAUAAQAAAAAAAAAFAAcAAQAAAAAAAAAGAAAAAQAAAAAAAAAGAAIAAQAAAAAAAAAGAAQAAQAAAAAAAAAGAAYAAQAAAAAAAAAHAAEAAQAAAAAAAAAHAAMAAQAAAAAAAAAHAAUAAQAAAAAAAAAHAAcAAQAAAAAAAAAAAAcAAAAAAAAAAAABAAYAAAAAAAAAAAACAAcAAAAAAAAAAAADAAYAAAAAAAAAAAAEAAcAAAAAAAAAAAAFAAYAAAAAAAAAAAAGAAcAAAAAAAAAAAAHAAYAAAAAAAAAAAAGAAUAAAAAAAAAAAAHAAQAAAAAAAAAAAAFAAQAAAAAAAAAAAAEAAUAAAAAAAAAAAADAAQAAAAAAAAAAAACAAUAAAAAAAAAAAAAAAUAAAAAAAAAAAABAAQAAAAAAAAAAAAAAAMAAAAAAAAAAAACAAMAAAAAAAAAAAABAAIAAAAAAAAAAAACAAEAAAAAAAAAAAADAAIAAAAAAAAAAAADAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAEAAEAAAAAAAAAAAAFAAAAAAAAAAAAAAAGAAEAAAAAAAAAAAAHAAAAAAAAAAAAAAAHAAIAAAAAAAAAAAAGAAMAAAAAAAAAAAAFAAIAAAAAAAAAAAAEAAMAAAAAAAAAAAA=")
 tile_set = SubResource("TileSet_p1hux")
 
+[node name="HighlightMap" type="TileMapLayer" parent="."]
+position = Vector2(680, 260)
+tile_set = SubResource("TileSet_67vll")
+
 [node name="DebugLog" type="Label" parent="."]
+visible = false
 offset_top = 828.0
 offset_right = 245.0
 offset_bottom = 1078.0
@@ -129,7 +144,7 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_58hvh")
 theme_override_styles/hover = SubResource("StyleBoxFlat_fv2tt")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_riqp1")
 theme_override_styles/normal = SubResource("StyleBoxFlat_4ht4n")
-text = "Main_Resume"
+text = "Resume"
 
 [node name="Main_Exit" type="Button" parent="PauseLayer/Control/VBoxContainer"]
 layout_mode = 2
@@ -145,15 +160,17 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_58hvh")
 theme_override_styles/hover = SubResource("StyleBoxFlat_677qx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_gve4v")
 theme_override_styles/normal = SubResource("StyleBoxFlat_4ht4n")
-text = "Main_Exit
+text = "Exit
 "
 
 [node name="Rest" type="Button" parent="."]
+visible = false
 offset_right = 111.0
 offset_bottom = 48.0
 text = "rest"
 
 [node name="AIMove" type="Button" parent="."]
+visible = false
 offset_top = 89.0
 offset_right = 111.0
 offset_bottom = 137.0
@@ -162,6 +179,7 @@ text = "AIMove"
 [node name="Timer" type="Timer" parent="."]
 
 [node name="TimerUp" type="Button" parent="."]
+visible = false
 offset_top = 161.0
 offset_right = 111.0
 offset_bottom = 209.0
@@ -169,37 +187,75 @@ text = "Up
 "
 
 [node name="TimerDown" type="Button" parent="."]
+visible = false
 offset_top = 216.0
 offset_right = 111.0
 offset_bottom = 264.0
 text = "Down
 "
 
-[node name="PromotionLayer" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="."]
 
-[node name="PromotionMenu" type="PanelContainer" parent="PromotionLayer"]
-visible = false
-offset_left = 191.0
-offset_right = 235.0
-offset_bottom = 40.0
+[node name="SidePanel" type="PanelContainer" parent="HUD"]
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -250.0
+grow_horizontal = 0
+grow_vertical = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="PromotionLayer/PromotionMenu"]
+[node name="GameStatusLabel" type="Label" parent="HUD/SidePanel"]
 layout_mode = 2
-size_flags_horizontal = 4
 
-[node name="QueenBtn" type="Button" parent="PromotionLayer/PromotionMenu/HBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="HUD/SidePanel/GameStatusLabel"]
+layout_mode = 2
+offset_top = 250.0
+offset_right = 250.0
+offset_bottom = 254.0
+
+[node name="UnitNameLabel" type="Label" parent="HUD/SidePanel/GameStatusLabel"]
+layout_mode = 2
+offset_top = 270.0
+offset_right = 250.0
+offset_bottom = 293.0
+
+[node name="UnitStatsLabel" type="Label" parent="HUD/SidePanel/GameStatusLabel"]
+layout_mode = 2
+offset_top = 300.0
+offset_right = 250.0
+offset_bottom = 323.0
+
+[node name="HSeparator2" type="HSeparator" parent="HUD/SidePanel/GameStatusLabel"]
+layout_mode = 2
+offset_top = 550.0
+offset_right = 250.0
+offset_bottom = 554.0
+
+[node name="PromotionContainer" type="VBoxContainer" parent="HUD/SidePanel/GameStatusLabel"]
+visible = false
+layout_mode = 2
+offset_top = 493.0
+offset_right = 250.0
+offset_bottom = 656.0
+
+[node name="ChoosePiece" type="Label" parent="HUD/SidePanel/GameStatusLabel/PromotionContainer"]
+layout_mode = 2
+text = "Choose Piece"
+
+[node name="QueenBtn" type="Button" parent="HUD/SidePanel/GameStatusLabel/PromotionContainer"]
 layout_mode = 2
 text = "Queen"
 
-[node name="RookBtn" type="Button" parent="PromotionLayer/PromotionMenu/HBoxContainer"]
+[node name="RookBtn" type="Button" parent="HUD/SidePanel/GameStatusLabel/PromotionContainer"]
 layout_mode = 2
 text = "Rock"
 
-[node name="BishopBtn" type="Button" parent="PromotionLayer/PromotionMenu/HBoxContainer"]
+[node name="BishopBtn" type="Button" parent="HUD/SidePanel/GameStatusLabel/PromotionContainer"]
 layout_mode = 2
 text = "Bishop"
 
-[node name="KnightBtn" type="Button" parent="PromotionLayer/PromotionMenu/HBoxContainer"]
+[node name="KnightBtn" type="Button" parent="HUD/SidePanel/GameStatusLabel/PromotionContainer"]
 layout_mode = 2
 text = "Knight"
 

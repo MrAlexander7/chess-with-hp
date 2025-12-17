@@ -3,8 +3,9 @@ extends Node2D
 var main = null
 
 var hp=1
+var current_hp = 1
 var attack=1
-var defence=1
+var defense=1
 
 var symbol = ""
 var id=0
@@ -13,6 +14,18 @@ var horzid=0
 var vertid=0
 var color=0
 var moved = false
+
+const STATS_CONFIG = {
+	0: [10, 0, 1],
+	1: [8, 1, 5],
+	2: [6, 1, 3],
+	3: [6, 1, 3],
+	4: [12, 5, 2],
+	5: [4, 1, 2]
+}
+
+var prev_vertid = -1
+var prev_horzid = -1
 
 func _ready() -> void:
 	pass
@@ -26,10 +39,22 @@ func init_props(id, tp, c, v, h, main_ref = null):
 	self.color=c
 	self.main = main_ref
 	$Sprite2D.frame=self.type+self.color*6
+	
+	var stats = STATS_CONFIG.get(tp, [5, 0, 1]) # Дефолт
+	hp = stats[0]
+	current_hp = stats[0]
+	defense = stats[1]
+	attack = stats[2]
+	
 	placeAtCell(v,h)
+	prev_vertid = v
+	prev_horzid = h
 	moved = false
 	
 func placeAtCell(v, h):
+	if vertid != -1 and horzid != -1:
+		prev_vertid = vertid
+		prev_horzid = horzid
 	self.horzid=h
 	self.vertid=v
 	# 1. Конвертуємо шахові координати (h=0 - низ) в TileMap (y=0 - верх)
@@ -43,8 +68,6 @@ func placeAtCell(v, h):
 		print("Помилка: не можу знайти TileMap у 'main'!")
 	
 	moved = true
-
-
 
 func canMove2Cell(v,h):
 	var dx = v - vertid
@@ -187,3 +210,19 @@ func promote_to(new_type):
 			self.symbol = new_symbol[new_type]
 		else:
 			self.symbol = new_symbol[new_type].to_upper()
+	var stats = STATS_CONFIG.get(new_type, [5, 0, 1])
+	current_hp = stats[0]
+	defense = stats[1]
+	attack = stats[2]
+
+func take_attack(amount, damage_type):
+	if damage_type == "ARMOR":
+		defense -= amount
+		if defense <= 0:
+			defense = 0
+		return false
+	else:
+		current_hp -= amount
+		if current_hp <= 0:
+			return true
+		return false

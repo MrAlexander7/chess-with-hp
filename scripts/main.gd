@@ -9,8 +9,18 @@ var activePiece=null
 var b = false
 @onready var debugLog = $DebugLog
 @onready var tilemapBoard = $Board
+@onready var highlight_map = $HighlightMap
 @onready var pause_menu = $PauseLayer
-@onready var promotion_menu = $PromotionLayer/PromotionMenu
+@onready var status_label = $HUD/SidePanel/GameStatusLabel
+@onready var unit_name_label = $HUD/SidePanel/GameStatusLabel/UnitNameLabel
+@onready var unit_stats_label = $HUD/SidePanel/GameStatusLabel/UnitStatsLabel
+@onready var promotion_container = $HUD/SidePanel/PromotionContainer
+
+# Кнопки лежать всередині PromotionContainer
+@onready var btn_queen = $HUD/SidePanel/PromotionContainer/QueenBtn
+@onready var btn_rook = $HUD/SidePanel/PromotionContainer/RookBtn
+@onready var btn_bishop = $HUD/SidePanel/PromotionContainer/BishopBtn
+@onready var btn_knight = $HUD/SidePanel/PromotionContainer/KnightBtn
 var pending_promotion_choice = -1
 
 func _ready() -> void:
@@ -20,18 +30,21 @@ func _ready() -> void:
 	#parseChessString("___r____/ppp__kp_/_____n__/____p___/_PP_P__P/__K_Pb__/P_______/_____R__")
 	#parseChessString("________/P_______/________/________/________/________/________/K____k__")
 	
-	white_is_bot = GameSettings.white_is_bot
-	black_is_bot = GameSettings.black_is_bot
+	if GameSettings:
+		white_is_bot = GameSettings.white_is_bot
+		black_is_bot = GameSettings.black_is_bot
 	
 	debugLog.text = "Режим: Білі=%s, Чорні=%s" % [white_is_bot, black_is_bot]
 	
-	if promotion_menu:
-		promotion_menu.visible = false
-		# Підключаємо сигнали кнопок (IDs: 1=Queen, 2=Bishop, 3=Knight, 4=Rook)
-		$PromotionLayer/PromotionMenu/HBoxContainer/QueenBtn.pressed.connect(func(): _on_promotion_selected(1))
-		$PromotionLayer/PromotionMenu/HBoxContainer/BishopBtn.pressed.connect(func(): _on_promotion_selected(2))
-		$PromotionLayer/PromotionMenu/HBoxContainer/KnightBtn.pressed.connect(func(): _on_promotion_selected(3))
-		$PromotionLayer/PromotionMenu/HBoxContainer/RookBtn.pressed.connect(func(): _on_promotion_selected(4))
+	if promotion_container:
+		promotion_container.visible = false
+		btn_queen.pressed.connect(func(): _on_promotion_selected(1))
+		btn_bishop.pressed.connect(func(): _on_promotion_selected(2))
+		btn_knight.pressed.connect(func(): _on_promotion_selected(3))
+		btn_rook.pressed.connect(func(): _on_promotion_selected(4))
+	
+	update_game_status_ui("The game has started! White's move")
+	update_unit_ui(null)
 	
 	if white_is_bot and current_turn == 0:
 		$Timer.start()
@@ -39,7 +52,42 @@ func _ready() -> void:
 
 func _on_promotion_selected(type_id):
 	pending_promotion_choice = type_id
-	promotion_menu.visible = false
+	promotion_container.visible = false
+	if activePiece:
+		update_unit_ui(activePiece)
+
+func update_game_status_ui(text: String):
+	if status_label:
+		status_label.text = text
+
+func update_unit_ui(piece):
+	
+	if piece == null:
+		unit_name_label.text = "Choise piece"
+		unit_stats_label.text = ""
+		return
+	
+	var type_names = {
+		0: "King",
+		1: "Queen",
+		2: "Bishop",
+		3: "Knight",
+		4: "Rook",
+		5: "Pawn"
+	}
+	var color_name = "White" if piece.color == 0 else "Black"
+	var p_name = type_names.get(piece.type, "Unknown")
+	unit_name_label.text = "%s %s" % [color_name, p_name]
+	
+	var stats_text = "❤️ HP: %d\n" % piece.current_hp
+	stats_text += "⚔️ Attack: %d\n" % piece.attack
+	stats_text += "🛡️ Defense: %d\n" % piece.defense
+	
+	# Додаткова інфа
+	if piece.moved:
+		stats_text += "\n(Already went)"
+	
+	unit_stats_label.text = stats_text
 
 func parseChessString(s):
 	var allTypes="KQBNRP"
@@ -96,8 +144,10 @@ func _input(event: InputEvent) -> void:
 			# Якщо фігура не активна, шукаємо фігуру на клітинці, куди клікнули
 			var p = get_piece_at(cellCoord.x, cellCoord.y)
 			if p != null:
+				update_unit_ui(p)
 				if p.color != current_turn:
-					debugLog.text = "Зараз хід іншого гравця!"
+					update_game_status_ui("It's another player's turn!")
+					debugLog.text = "It's another player's turn!"
 					return # Ігноруємо клік
 				activatePiece(p)
 		else:
@@ -121,25 +171,65 @@ func _input(event: InputEvent) -> void:
 								var new_rook_x = 5 if rook_x == 7 else 3
 								rook.placeAtCell(new_rook_x, activePiece.horzid)
 						else:
+							update_game_status_ui("Castling is prohibited by the rules!")
 							debugLog.text("Рокировка заборонена правилами!")
 							activePiece.placeAtCell(activePiece.vertid, activePiece.horzid)
 							activatePiece(null)
 							return
 							# Перевірка на взяття фігури
 					var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
-					if target_piece != null:
-						# canMove2Cell вже перевірила, що це фігура ворога
-						removePiece(target_piece)
-					
+					var turn_ended = false
+					if target_piece != null and target_piece.color != activePiece.color:
+						if target_piece.moved and target_piece.defense > 0:
+							debugLog.text = "Атака по броні"
+							target_piece.take_attack(activePiece.attack, "ARMOR")
+							var push_v = target_piece.prev_vertid
+							var push_h = target_piece.prev_horzid
+							var obstruction = get_piece_at(push_v, push_h)
+							if obstruction == null:
+								debugLog.text = "Ворог відкинутий"
+								target_piece.placeAtCell(push_v, push_h)
+							else:
+								debugLog.text = "Не має куда відкинути ворога"
+								var is_dead = target_piece.take_attack(activePiece.attack, "HP")
+								if is_dead:
+									removePiece(target_piece)
+									# Займаємо клітинку
+									activePiece.placeAtCell(cellCoord.x, cellCoord.y)
+									if activePiece.type == 5: 
+										await handle_pawn_promotion(activePiece)
+								else:
+									debugLog.text = "Ворог отримав поранення, але стоїть."
+									activePiece.placeAtCell(start_x, start_y)
+								turn_ended = true
+							activePiece.placeAtCell(start_x, start_y)
+							turn_ended = true
+						else:
+							var is_dead = target_piece.take_attack(activePiece.attack, "HP")
+							if is_dead:
+								removePiece(target_piece)
+								activePiece.placeAtCell(cellCoord.x, cellCoord.y)
+								if activePiece.type == 5: 
+									await handle_pawn_promotion(activePiece)
+								turn_ended = true
+							else:
+								activePiece.placeAtCell(start_x, start_y)
+								turn_ended = true
 					# Переміщуємо фігуру
-					activePiece.placeAtCell(cellCoord.x, cellCoord.y)
-					if activePiece.type == 5:
-						await handle_pawn_promotion(activePiece)
-					
-					activatePiece(null)
-					check_for_check_status()
-					change_turn()
+					elif target_piece == null:
+						activePiece.placeAtCell(cellCoord.x, cellCoord.y)
+						if activePiece.type == 5:
+							await handle_pawn_promotion(activePiece)
+						turn_ended = true
+					if turn_ended:
+						activePiece.moved = true
+						update_unit_ui(activePiece)
+						clear_highlights()
+						activatePiece(null)
+						check_for_check_status()
+						change_turn()
 				else: 
+					update_game_status_ui("Move not allowed! Your King is in check!")
 					debugLog.text = "Хід заборонено! Ваш Король під ударом!"
 			else:
 				# Перевіримо, чи є на цій клітинці інша НАША фігура.
@@ -152,6 +242,12 @@ func _input(event: InputEvent) -> void:
 
 func activatePiece(p):
 	activePiece=p
+	if p != null:
+		update_unit_ui(p)
+		show_possible_moves(p)
+	else:
+		update_unit_ui(null)
+		clear_highlights()
 
 #func findCellAtCoords(cx, cy):
 	##v = (cx-50)//60
@@ -196,9 +292,11 @@ func get_piece_at(v, h):
 func change_turn(b = false):
 	if current_turn == 0:
 		current_turn = 1 # Тепер чорні
+		update_game_status_ui("Black's move")
 		debugLog.text = "Хід чорних"
 	else:
 		current_turn = 0 # Тепер білі
+		update_game_status_ui("White's move")
 		debugLog.text = "Хід білих"
 	check_game_over_status()
 	
@@ -244,6 +342,9 @@ func update_debug_info(v, h):
 	
 	info += "Під ударом Білих: %s\n" % str(attacked_by_white)
 	info += "Під ударом Чорних: %s\n" % str(attacked_by_black)
+	
+	info += "-----------------\n"
+	
 	
 	debugLog.text = info
 
@@ -293,12 +394,14 @@ func check_for_check_status():
 	#Перевірка Білого короля на атаку чорними
 	var w_king_pos = find_king_coords(0)
 	if is_square_under_attack(w_king_pos.x, w_king_pos.y, 1):
+		update_game_status_ui("Check to the White King")
 		debugLog.text = "Шах Білому королю"
 		highlight_king(0,Color.RED)
 	
 	#Перевірка Чорного короля на атаку білими
 	var b_king_pos = find_king_coords(1)
 	if is_square_under_attack(b_king_pos.x, b_king_pos.y, 0):
+		update_game_status_ui("Check to the Black King")
 		debugLog.text = "Шах Чорному королю"
 		highlight_king(1,Color.RED)
 
@@ -329,15 +432,18 @@ func check_game_over_status():
 	var can_move = has_any_valid_moves(current_turn)
 	
 	if is_in_check and ! can_move:
+		update_game_status_ui("Checkmate")
 		debugLog.text = "Мат гра закінченна"
 		restart_game()
 	
 	elif ! is_in_check and ! can_move:
+		update_game_status_ui("Stalemate")
 		debugLog.text = "Пат нічия"
 		restart_game()
 
 func restart_game(t = 5.0):
-	debugLog.text = "Перезагрузка гри через 5 секунд"
+	update_game_status_ui("")
+	debugLog.text = "Game will restart in 5 seconds"
 	await get_tree().create_timer(t).timeout
 	get_tree().reload_current_scene()
 
@@ -345,6 +451,7 @@ func can_castle_safely(king_piece, target_v, target_h) -> bool:
 	var enemy_color = 1 if king_piece.color == 0 else 0
 	
 	if is_square_under_attack(king_piece.vertid, king_piece.horzid, enemy_color):
+		update_game_status_ui("Castling is impossible: Check to the King!")
 		debugLog.text = "Рокировка неможлива: Королю Шах!"
 		return false
 	
@@ -352,6 +459,7 @@ func can_castle_safely(king_piece, target_v, target_h) -> bool:
 	var middle_v = king_piece.vertid + direction
 	
 	if is_square_under_attack(king_piece.vertid, king_piece.horzid, enemy_color):
+		update_game_status_ui("Castling is impossible: The intermediate square is under attack!")
 		debugLog.text = "Рокировка неможлива: Проміжна клітинка під ударом!"
 		return false
 	
@@ -398,14 +506,50 @@ func _on_ai_move_pressed() -> void:
 		return
 	
 	var move = posible_move.pick_random()
+	var attacker = move.p
+	var target_v = move.v
+	var target_h = move.h
+	
+	var start_v = attacker.vertid
+	var start_h = attacker.horzid
 	
 	var target_piece = get_piece_at(move.v, move.h)
+	var move_successful = true
 	if target_piece != null:
-		removePiece(target_piece)
+		if target_piece.moved and target_piece.defense > 0:
+			debugLog.text = "Бот б'є по броні"
+			target_piece.take_attack(attacker.attack, "ARMOR")
+			
+			var push_v = target_piece.prev_vertid
+			var push_h = target_piece.prev_horzid
+			var obstruction = get_piece_at(push_v, push_h)
+			
+			if obstruction == null:
+				target_piece.placeAtCell(push_v, push_h)
+				move_successful = false
+			else:
+				var is_dead = target_piece.take_attack(attacker.attack, "HP")
+				if is_dead:
+					removePiece(target_piece)
+					move_successful = true
+				else:
+					move_successful = false
+		else:
+			var is_dead = target_piece.take_attack(attacker.attack, "HP")
+			if is_dead:
+				removePiece(target_piece)
+				move_successful = true
+			else:
+				move_successful = false
+	else:
+		move_successful = true
 	
-	move.p.placeAtCell(move.v, move.h)
-	if move.p.type == 5:
-		await handle_pawn_promotion(move.p)
+	if move_successful:
+		attacker.placeAtCell(target_v, target_h)
+		if attacker.type == 5:
+			await handle_pawn_promotion(attacker)
+	else:
+		attacker.placeAtCell(attacker.vertid, attacker.horzid)
 	activatePiece(null)
 	check_for_check_status()
 	check_draw()
@@ -435,19 +579,6 @@ func check_draw():
 		restart_game()
 	pass
 
-func record_move(piece, from_v, from_h, to_v, to_h, action_type, target_piece = null):
-	var entry = {
-		"turn_number": move_history.size + 1,
-		"color": piece.color,
-		"piece_type": piece.type,
-		"from": Vector2i(from_v, from_h),
-		"to": Vector2i(to_v, to_h),
-		"action": action_type,
-		"target_type": target_piece.type if target_piece else -1
-	}
-	move_history.append(entry)
-	debugLog.text = "Історія: %s" % entry
-
 func handle_pawn_promotion(pawn):
 	var target_row = 7 if pawn.color == 0 else 0
 	if pawn.type != 5 or pawn.horzid != target_row:
@@ -465,12 +596,28 @@ func handle_pawn_promotion(pawn):
 		new_type = options.pick_random()
 		debugLog.text = "Бот перетворив пішака на ID: " + str(new_type)
 	else:
-		if promotion_menu:
-			promotion_menu.visible = true
+		if promotion_container:
+			update_game_status_ui("Select a transformation!")
+			promotion_container.visible = true
 			pending_promotion_choice = -1
+			
 			while pending_promotion_choice == -1:
 				await get_tree().create_timer(0.1).timeout
+			
 			new_type = pending_promotion_choice
+			promotion_container.visible = false # Ховаємо після вибору
 		else:
-			print("ПОМИЛКА: Немає PromotionMenu у сцені!")
+			print("ПОМИЛКА: Немає PromotionContainer!")
 	pawn.promote_to(new_type)
+	update_unit_ui(pawn)
+
+func clear_highlights():
+	highlight_map.clear()
+
+func show_possible_moves(piece):
+	clear_highlights()
+	for v in range(8):
+		for h in range(8):
+			if piece.canMove2Cell(v, h) and is_move_safe(piece, v, h):
+				var tile_pos = Vector2i(v, 7 - h)
+				highlight_map.set_cell(tile_pos, 0, Vector2i(0, 0))
