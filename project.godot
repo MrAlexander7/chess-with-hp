@@ -24,7 +24,8 @@ GameSettings="*res://scripts/GameSettings.gd"
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/size/mode=3
+window/size/mode=4
+window/stretch/mode="viewport"
 
 [dotnet]
 
@@ -34,3 +35,4 @@ project/assembly_name="ChessWithHitpoints"
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

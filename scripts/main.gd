@@ -1,9 +1,18 @@
 extends Node2D
 var pieces=[]
 var move_history = []
+const PIECE_VALUES = {
+	0: 100, 
+	1: 9, 
+	2: 3, 
+	3: 3, 
+	4: 5, 
+	5: 1
+}
 var current_turn = 0
 var white_is_bot = false
 var black_is_bot = false
+var last_attacked_piece = null
 
 var activePiece=null
 var b = false
@@ -180,6 +189,7 @@ func _input(event: InputEvent) -> void:
 					var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
 					var turn_ended = false
 					if target_piece != null and target_piece.color != activePiece.color:
+						highlight_attack(target_piece)
 						if target_piece.moved and target_piece.defense > 0:
 							debugLog.text = "Атака по броні"
 							target_piece.take_attack(activePiece.attack, "ARMOR")
@@ -358,15 +368,32 @@ func is_move_safe(piece, target_v, target_h) -> bool:
 	var old_h = piece.horzid
 	var target_piece = get_piece_at(target_v, target_h)
 	
-	#Зробимо віртуальний хід
-	piece.vertid = target_v
-	piece.horzid = target_h
+	var move_is_effective = true
 	
-	#У разі наявності фігури там тимчасово ховаєм
-	if target_piece:
-		target_piece.vertid = -100
-		target_piece.horzid = -100
-	
+	if target_piece != null:
+		var will_die = false
+		var will_pushed = false
+		
+		if target_piece.moved and target_piece.defense >= 0:
+			if piece.attack >= target_piece.current_hp:
+				will_die = true
+		else:
+			if piece.attack >= target_piece.current_hp:
+				will_die = true
+				
+		if not will_die and not will_pushed:
+			move_is_effective = false
+	if move_is_effective:
+		#Зробимо віртуальний хід
+		piece.vertid = target_v
+		piece.horzid = target_h
+		#У разі наявності фігури там тимчасово ховаєм
+		if target_piece:
+			target_piece.vertid = -100
+			target_piece.horzid = -100
+	else:
+		pass
+		
 	#Пошук кординат нашого короля
 	var king_coords = find_king_coords(piece.color)
 	
@@ -409,6 +436,16 @@ func highlight_king(k_color, color_modulate):
 	for p in pieces:
 		if p.type == 0 and p.color == k_color:
 			p.get_node("Sprite2D").modulate = color_modulate
+
+func highlight_attack(target_p):
+	if last_attacked_piece != null and is_instance_valid(last_attacked_piece):
+		last_attacked_piece.get_node("Sprite2D").modulate = Color.WHITE
+	
+	if target_p != null and is_instance_valid(target_p):
+		target_p.get_node("Sprite2D").modulate = Color(1, 0.5, 0.5)
+		last_attacked_piece = target_p
+	else:
+		last_attacked_piece = null
 
 func reset_kings_color():
 	highlight_king(0, Color.WHITE)
@@ -489,6 +526,68 @@ func _on_button_pressed() -> void:
 	restart_game(0.5)
 	pass # Replace with function body.
 
+func get_move_score(attacker, target_v, target_h):
+	var score = 0
+	var target = get_piece_at(target_v, target_h)
+	
+	score += analyze_move_for_mate_or_check(attacker, target_v, target_h)
+	
+	if target == null:
+		return randi() % 5
+	
+	var target_value = PIECE_VALUES.get(target.type, 1)
+	if target.moved and target.defense > 0:
+		var push_v = target.prev_vertid
+		var push_h = target.prev_horzid
+		var obstruction = get_piece_at(push_v, push_h)
+		if obstruction == null:
+			score += 10
+		else:
+			score += 50
+	else:
+		var estimated_dmg = attacker.attack
+		
+		if target.hp - estimated_dmg <= 0:
+			score =+ 100 + (target_value * 20)
+		else:
+			score += 20 + estimated_dmg
+	return score
+
+func analyze_move_for_mate_or_check(attacker, target_v, target_h):
+	var bonus_score = 0
+	var enemy_color = 0
+	if attacker.color == 0:
+		enemy_color = 1
+	else:
+		enemy_color = 0
+	
+	var old_v = attacker.vertid
+	var old_h = attacker.horzid
+	var target_piece = get_piece_at(target_v, target_h)
+	
+	attacker.vertid = target_v
+	attacker.horzid = target_h
+	
+	if target_piece:
+		target_piece.vertid = -100
+		target_piece.horzid = -100
+	
+	var king_pos = find_king_coords(enemy_color)
+	var is_check = is_square_under_attack(king_pos.x, king_pos.y, attacker.color)
+	
+	if is_check:
+		if !has_any_valid_moves(enemy_color):
+			bonus_score = 1000
+			debugLog.text = "MAT"
+		else:
+			bonus_score = 500
+	attacker.vertid = old_v
+	attacker.horzid = old_h
+	if target_piece:
+		target_piece.vertid = target_v
+		target_piece.horzid = target_h
+		
+	return bonus_score
 
 func _on_ai_move_pressed() -> void:
 	var posible_move = [];
@@ -499,23 +598,30 @@ func _on_ai_move_pressed() -> void:
 				for h in range(8):
 					if p.canMove2Cell(v,h):
 						if is_move_safe(p,v,h):
-							posible_move.append({"p": p, "v": v, "h": h})
+							var score = get_move_score(p, v, h)
+							posible_move.append({"p": p, "v": v, "h": h, "score": score})
 	debugLog.text = str(len(posible_move))
 	#print(posible_move)
 	if len(posible_move) == 0:
+		update_game_status_ui("MAT or PAT. The bot cannot walk.")
 		return
 	
-	var move = posible_move.pick_random()
-	var attacker = move.p
-	var target_v = move.v
-	var target_h = move.h
+	posible_move.sort_custom(
+		func(a,b):
+			return a["score"] > b["score"]
+	)
+	var best_move = posible_move[0]
+	var attacker = best_move.p
+	var target_v = best_move.v
+	var target_h = best_move.h
 	
 	var start_v = attacker.vertid
 	var start_h = attacker.horzid
 	
-	var target_piece = get_piece_at(move.v, move.h)
+	var target_piece = get_piece_at(target_v, target_h)
 	var move_successful = true
 	if target_piece != null:
+		highlight_attack(target_piece)
 		if target_piece.moved and target_piece.defense > 0:
 			debugLog.text = "Бот б'є по броні"
 			target_piece.take_attack(attacker.attack, "ARMOR")
