@@ -6,6 +6,16 @@
 [node name="Piece" type="Node2D"]
 script = ExtResource("1_3653e")
 
+[node name="HighlightRect" type="ReferenceRect" parent="."]
+visible = false
+offset_left = -30.0
+offset_top = -30.0
+offset_right = 30.0
+offset_bottom = 30.0
+mouse_filter = 2
+border_width = 2.0
+editor_only = false
+
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.300469, 0.300469)
 texture = ExtResource("2_hisf2")

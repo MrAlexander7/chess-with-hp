@@ -190,6 +190,7 @@ func _input(event: InputEvent) -> void:
 					var turn_ended = false
 					if target_piece != null and target_piece.color != activePiece.color:
 						highlight_attack(target_piece)
+						await get_tree().create_timer(0.3).timeout
 						if target_piece.moved and target_piece.defense > 0:
 							debugLog.text = "Атака по броні"
 							target_piece.take_attack(activePiece.attack, "ARMOR")
@@ -234,6 +235,7 @@ func _input(event: InputEvent) -> void:
 					if turn_ended:
 						activePiece.moved = true
 						update_unit_ui(activePiece)
+						highlight_attack(null)
 						clear_highlights()
 						activatePiece(null)
 						check_for_check_status()
@@ -251,8 +253,15 @@ func _input(event: InputEvent) -> void:
 					activatePiece(null)
 
 func activatePiece(p):
+	if activePiece != null and is_instance_valid(activePiece):
+			if activePiece.has_node("HighlightRect"):
+				activePiece.get_node("HighlightRect").visible = false
 	activePiece=p
 	if p != null:
+		if p.has_node("HighlightRect"):
+			var rect = p.get_node("HighlightRect")
+			rect.visible = true
+			rect.border_color = Color(0, 1, 0, 0.5)
 		update_unit_ui(p)
 		show_possible_moves(p)
 	else:
@@ -439,10 +448,14 @@ func highlight_king(k_color, color_modulate):
 
 func highlight_attack(target_p):
 	if last_attacked_piece != null and is_instance_valid(last_attacked_piece):
-		last_attacked_piece.get_node("Sprite2D").modulate = Color.WHITE
+		if last_attacked_piece.has_node("HighlightRect"):
+			last_attacked_piece.get_node("HighlightRect").visible = false
 	
 	if target_p != null and is_instance_valid(target_p):
-		target_p.get_node("Sprite2D").modulate = Color(1, 0.5, 0.5)
+		if target_p.has_node("HighlightRect"):
+			var rect = target_p.get_node("HighlightRect")
+			rect.visible = true
+			rect.border_color = Color(1, 0, 0, 0.5) # Червоний напівпрозорий (атака)
 		last_attacked_piece = target_p
 	else:
 		last_attacked_piece = null
