@@ -606,31 +606,38 @@ func get_move_score(attacker, target_v, target_h):
 	
 	score += analyze_move_for_mate_or_check(attacker, target_v, target_h)
 	
-	if target == null:
-		return randi() % 5
-	
-	var target_value = PIECE_VALUES.get(target.type, 1)
-	
-	var estimated_dmg = attacker.attack
-	if attacker.type == 0:
-		var king_attackers = get_attackers_of_square(attacker.vertid, attacker.horzid, target.color)
-		if target in king_attackers:
-			estimated_dmg = 9999
-			score += 500
-	
-	if target.moved and target.defense > 0:
-		var push_v = target.prev_vertid
-		var push_h = target.prev_horzid
-		var obstruction = get_piece_at(push_v, push_h)
-		if obstruction == null:
-			score += 10
+	if target != null:
+		var target_value = PIECE_VALUES.get(target.type, 1)
+		var estimated_dmg = attacker.attack
+		if attacker.type == 0:
+			var king_attackers = get_attackers_of_square(attacker.vertid, attacker.horzid, target.color)
+			if target in king_attackers:
+				estimated_dmg = 9999
+				score += 200
+		var damage_to_hp = 0
+		if target.moved and target.defense > 0:
+			damage_to_hp = max(0, estimated_dmg - target.defense)
 		else:
-			score += 50
-	else:
-		if target.hp - estimated_dmg <= 0:
+			damage_to_hp = estimated_dmg
+		if damage_to_hp >= target.current_hp:
 			score =+ 100 + (target_value * 20)
 		else:
-			score += 20 + estimated_dmg
+			score += damage_to_hp * 2
+			
+			if damage_to_hp == 0:
+				score -= 10
+		if (target_v == 3 or target_v == 4) and (target_h == 3 or target_h == 4):
+			score += 5
+		var enemy_color = 1 if attacker.color == 0 else 0
+		if is_square_under_attack(target_v, target_h, enemy_color):
+			var my_value = PIECE_VALUES.get(attacker.type, 1)
+			var trade_value = 0
+			if target != null:
+				target_value = PIECE_VALUES.get(target.type, 1)
+			
+			if my_value > target_value:
+				score -= (my_value - target_value) * 10
+	score += randi() % 5
 	return score
 
 func analyze_move_for_mate_or_check(attacker, target_v, target_h):
@@ -691,7 +698,8 @@ func _on_ai_move_pressed() -> void:
 		func(a,b):
 			return a["score"] > b["score"]
 	)
-	var best_move = posible_move[0]
+	var top_move_count = min(3, len(posible_move))
+	var best_move = posible_move[randi() % top_move_count]
 	var attacker = best_move.p
 	var target_v = best_move.v
 	var target_h = best_move.h
