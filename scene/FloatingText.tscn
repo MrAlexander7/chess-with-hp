@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://djbejmhfmarhc"]
+
+[ext_resource type="Script" path="res://scripts/floating_text.gd" id="1_o44oa"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_64nbh"]
+font_size = 24
+font_color = Color(1, 0, 0, 1)
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+
+[node name="FloatingText" type="Node2D"]
+z_index = 100
+script = ExtResource("1_o44oa")
+
+[node name="Label" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+label_settings = SubResource("LabelSettings_64nbh")

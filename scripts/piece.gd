@@ -21,7 +21,7 @@ const STATS_CONFIG = {
 	2: [6, 1, 3],
 	3: [6, 1, 3],
 	4: [12, 5, 2],
-	5: [4, 1, 2]
+	5: [5, 1, 2]
 }
 
 var prev_vertid = -1
@@ -31,7 +31,7 @@ func _ready() -> void:
 	pass
 
 func _to_string() -> String:
-	return self.sybol + "abcdefgh"[vertid] + str(horzid + 1)
+	return self.symbol + "abcdefgh"[vertid] + str(horzid + 1)
 
 func init_props(id, tp, c, v, h, main_ref = null):
 	self.id=id
@@ -46,28 +46,46 @@ func init_props(id, tp, c, v, h, main_ref = null):
 	defense = stats[1]
 	attack = stats[2]
 	
-	placeAtCell(v,h)
+	placeAtCell(v,h, false)
 	prev_vertid = v
 	prev_horzid = h
 	moved = false
 	
-func placeAtCell(v, h):
-	if vertid != -1 and horzid != -1:
-		prev_vertid = vertid
-		prev_horzid = horzid
-	self.horzid=h
-	self.vertid=v
+func placeAtCell(v, h, animated = true, only_visual = false) -> Tween:
+	if !only_visual:
+		if vertid != -1 and horzid != -1:
+			prev_vertid = vertid
+			prev_horzid = horzid
+		self.horzid=h
+		self.vertid=v
+		moved = true
 	# 1. Конвертуємо шахові координати (h=0 - низ) в TileMap (y=0 - верх)
 	# Формула: tilemap_y = 7 - chess_h
+	var target_pos = Vector2.ZERO
 	var tilemap_coords = Vector2i(v, 7 - h)
 	
 	# 2. Використовуємо TileMap, щоб отримати ЦЕНТР клітинки в пікселях
 	if main and main.tilemapBoard:
-		self.global_position = main.tilemapBoard.to_global(main.tilemapBoard.map_to_local(tilemap_coords))
+		target_pos = main.tilemapBoard.to_global(main.tilemapBoard.map_to_local(tilemap_coords))
 	else:
+		return null
 		print("Помилка: не можу знайти TileMap у 'main'!")
 	
-	moved = true
+	if animated:
+		var tween = create_tween()
+		if only_visual:
+			tween.set_trans(Tween.TRANS_CUBIC)
+			tween.set_ease(Tween.EASE_IN)
+			tween.tween_property(self, "global_position", target_pos, 0.3)
+		else:
+			tween.set_trans(Tween.TRANS_CUBIC)
+			tween.set_ease(Tween.EASE_OUT)
+			tween.tween_property(self, "global_position", target_pos, 0.5)
+		return tween
+	else:
+		global_position = target_pos
+		return null
+	
 
 func canMove2Cell(v,h):
 	var dx = v - vertid

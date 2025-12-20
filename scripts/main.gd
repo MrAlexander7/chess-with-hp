@@ -88,9 +88,9 @@ func update_unit_ui(piece):
 	var p_name = type_names.get(piece.type, "Unknown")
 	unit_name_label.text = "%s %s" % [color_name, p_name]
 	
-	var stats_text = "❤️ HP: %d\n" % piece.current_hp
-	stats_text += "⚔️ Attack: %d\n" % piece.attack
-	stats_text += "🛡️ Defense: %d\n" % piece.defense
+	var stats_text = "[img=42x42]res://img/icon_hp.png[/img] HP: %d\n" % piece.current_hp
+	stats_text += "[img=42x42]res://img/icon_attack.png[/img] Attack: %d\n" % piece.attack
+	stats_text += "[img=42x42]res://img/icon_defense.png[/img] Defense: %d\n" % piece.defense
 	
 	# Додаткова інфа
 	if piece.moved:
@@ -181,65 +181,100 @@ func _input(event: InputEvent) -> void:
 								rook.placeAtCell(new_rook_x, activePiece.horzid)
 						else:
 							update_game_status_ui("Castling is prohibited by the rules!")
-							debugLog.text("Рокировка заборонена правилами!")
+							#debugLog.text("Рокировка заборонена правилами!")
 							activePiece.placeAtCell(activePiece.vertid, activePiece.horzid)
 							activatePiece(null)
 							return
 							# Перевірка на взяття фігури
 					var target_piece = get_piece_at(cellCoord.x, cellCoord.y)
-					var turn_ended = false
+					var is_royal_punishment = false
 					if target_piece != null and target_piece.color != activePiece.color:
 						highlight_attack(target_piece)
-						await get_tree().create_timer(0.3).timeout
-						if target_piece.moved and target_piece.defense > 0:
-							debugLog.text = "Атака по броні"
-							target_piece.take_attack(activePiece.attack, "ARMOR")
-							var push_v = target_piece.prev_vertid
-							var push_h = target_piece.prev_horzid
-							var obstruction = get_piece_at(push_v, push_h)
-							if obstruction == null:
-								debugLog.text = "Ворог відкинутий"
-								target_piece.placeAtCell(push_v, push_h)
+						#await get_tree().create_timer(0.3).timeout 
+						var attack_tween = activePiece.placeAtCell(cellCoord.x, cellCoord.y, true, true)
+						if attack_tween: 
+							await attack_tween.finished
+						var damage_to_deal = activePiece.attack
+						if activePiece.type == 0:
+							var king_attackers = get_attackers_of_square(activePiece.vertid, activePiece.horzid, target_piece.color)
+							if target_piece in king_attackers:
+								damage_to_deal = 9999 # Смертельна шкода
+								is_royal_punishment = true
+								update_game_status_ui("ROYAL PUNISHMENT! VANSHOT!")
+								debugLog.text = "КОРОЛІВСЬКА КАРА! ВАНШОТ!"
+						if is_royal_punishment:
+							var is_dead = target_piece.take_attack(damage_to_deal, "HP") 
+							spawn_damage_text(target_piece.global_position, damage_to_deal, "CRIT")
+							if is_dead:
+								#txt.position = target_piece.position
+								#txt.start_anim(damage_to_deal)
+								removePiece(target_piece)
+								activePiece.placeAtCell(cellCoord.x, cellCoord.y, false, false)
+								finish_move(activePiece)
 							else:
-								debugLog.text = "Не має куда відкинути ворога"
-								var is_dead = target_piece.take_attack(activePiece.attack, "HP")
-								if is_dead:
-									removePiece(target_piece)
-									# Займаємо клітинку
-									activePiece.placeAtCell(cellCoord.x, cellCoord.y)
-									if activePiece.type == 5: 
-										await handle_pawn_promotion(activePiece)
-								else:
-									debugLog.text = "Ворог отримав поранення, але стоїть."
-									activePiece.placeAtCell(start_x, start_y)
-								turn_ended = true
-							activePiece.placeAtCell(start_x, start_y)
-							turn_ended = true
-						else:
-							var is_dead = target_piece.take_attack(activePiece.attack, "HP")
+								await _return_piece_home(activePiece, start_x, start_y)
+								finish_move(activePiece)
+								
+						elif target_piece.moved and target_piece.defense > 0:
+							debugLog.text = "Атака по броні"
+							
+							var current_def = target_piece.defense
+							var damage_to_armor = min(current_def, damage_to_deal) # Броня бере на себе скільки може
+							var damage_to_hp = max(0, damage_to_deal - current_def)
+							
+							target_piece.take_attack(damage_to_deal, "ARMOR")
+							spawn_damage_text(target_piece.global_position, damage_to_armor, "ARMOR")
+							
+							var is_dead = false
+							if damage_to_hp > 0:
+								is_dead = target_piece.take_attack(damage_to_hp, "HP")
+								spawn_damage_text(target_piece.global_position, damage_to_hp, "HP")
 							if is_dead:
 								removePiece(target_piece)
-								activePiece.placeAtCell(cellCoord.x, cellCoord.y)
+								activePiece.placeAtCell(cellCoord.x, cellCoord.y, false, false)
+								finish_move(activePiece)
+							else:
+								var push_v = target_piece.prev_vertid
+								var push_h = target_piece.prev_horzid
+								var obstruction = get_piece_at(push_v, push_h)
+								if obstruction == null:
+									debugLog.text = "Ворог відкинутий"
+									target_piece.placeAtCell(push_v, push_h)
+									await _return_piece_home(activePiece, start_x, start_y)
+									finish_move(activePiece)
+								else:
+									debugLog.text = "Не має куда відкинути ворога"
+									is_dead = target_piece.take_attack(damage_to_hp, "HP")
+									spawn_damage_text(target_piece.global_position, damage_to_hp, "HP")
+									if is_dead:
+										removePiece(target_piece)
+										# Займаємо клітинку
+										activePiece.placeAtCell(cellCoord.x, cellCoord.y, false, false)
+										if activePiece.type == 5: 
+											await handle_pawn_promotion(activePiece)
+										finish_move(activePiece)
+									else:
+										debugLog.text = "Ворог отримав поранення, але стоїть."
+										await _return_piece_home(activePiece, start_x, start_y)
+										finish_move(activePiece)
+						else:
+							var is_dead = target_piece.take_attack(damage_to_deal, "HP")
+							spawn_damage_text(target_piece.global_position, damage_to_deal, "HP")
+							if is_dead:
+								removePiece(target_piece)
+								activePiece.placeAtCell(cellCoord.x, cellCoord.y, false, false)
 								if activePiece.type == 5: 
 									await handle_pawn_promotion(activePiece)
-								turn_ended = true
+								finish_move(activePiece)
 							else:
-								activePiece.placeAtCell(start_x, start_y)
-								turn_ended = true
+								await _return_piece_home(activePiece, start_x, start_y)
+								finish_move(activePiece)
 					# Переміщуємо фігуру
 					elif target_piece == null:
 						activePiece.placeAtCell(cellCoord.x, cellCoord.y)
 						if activePiece.type == 5:
 							await handle_pawn_promotion(activePiece)
-						turn_ended = true
-					if turn_ended:
-						activePiece.moved = true
-						update_unit_ui(activePiece)
-						highlight_attack(null)
-						clear_highlights()
-						activatePiece(null)
-						check_for_check_status()
-						change_turn()
+						finish_move(activePiece)
 				else: 
 					update_game_status_ui("Move not allowed! Your King is in check!")
 					debugLog.text = "Хід заборонено! Ваш Король під ударом!"
@@ -251,6 +286,11 @@ func _input(event: InputEvent) -> void:
 					activatePiece(target_piece)
 				else:
 					activatePiece(null)
+
+func _return_piece_home(piece, v, h):
+	var t = piece.placeAtCell(v, h, true, true)
+	if t: 
+		await t.finished
 
 func activatePiece(p):
 	if activePiece != null and is_instance_valid(activePiece):
@@ -306,7 +346,16 @@ func get_piece_at(v, h):
 			return p
 	return null
 
-
+func finish_move(piece):
+	piece.moved = true
+	update_unit_ui(piece)
+	
+	highlight_attack(null)
+	clear_highlights()
+	activatePiece(null)
+	
+	check_for_check_status()
+	change_turn()
 
 func change_turn(b = false):
 	if current_turn == 0:
@@ -338,6 +387,13 @@ func is_square_under_attack(v, h, enemy_color) -> bool:
 				return true
 	return false
 
+func get_attackers_of_square(v, h, enemy_color) -> Array:
+	var attackers = []
+	for p in pieces:
+		if p != null and p.color == enemy_color:
+			if p.is_attacking_square(v, h):
+				attackers.append(p)
+	return attackers
 
 func update_debug_info(v, h):
 	var info = "Клітинка: (%d, %d)\n" % [v, h]
@@ -383,11 +439,18 @@ func is_move_safe(piece, target_v, target_h) -> bool:
 		var will_die = false
 		var will_pushed = false
 		
+		var calculated_damage = piece.attack
+		
+		if piece.type == 0:
+			var king_attackers = get_attackers_of_square(piece.vertid, piece.horzid, target_piece.color)
+			if target_piece in king_attackers:
+				calculated_damage = 9999
+		
 		if target_piece.moved and target_piece.defense >= 0:
-			if piece.attack >= target_piece.current_hp:
+			if calculated_damage >= target_piece.current_hp:
 				will_die = true
 		else:
-			if piece.attack >= target_piece.current_hp:
+			if calculated_damage >= target_piece.current_hp:
 				will_die = true
 				
 		if not will_die and not will_pushed:
@@ -400,8 +463,6 @@ func is_move_safe(piece, target_v, target_h) -> bool:
 		if target_piece:
 			target_piece.vertid = -100
 			target_piece.horzid = -100
-	else:
-		pass
 		
 	#Пошук кординат нашого короля
 	var king_coords = find_king_coords(piece.color)
@@ -549,6 +610,14 @@ func get_move_score(attacker, target_v, target_h):
 		return randi() % 5
 	
 	var target_value = PIECE_VALUES.get(target.type, 1)
+	
+	var estimated_dmg = attacker.attack
+	if attacker.type == 0:
+		var king_attackers = get_attackers_of_square(attacker.vertid, attacker.horzid, target.color)
+		if target in king_attackers:
+			estimated_dmg = 9999
+			score += 500
+	
 	if target.moved and target.defense > 0:
 		var push_v = target.prev_vertid
 		var push_h = target.prev_horzid
@@ -558,8 +627,6 @@ func get_move_score(attacker, target_v, target_h):
 		else:
 			score += 50
 	else:
-		var estimated_dmg = attacker.attack
-		
 		if target.hp - estimated_dmg <= 0:
 			score =+ 100 + (target_value * 20)
 		else:
@@ -603,6 +670,7 @@ func analyze_move_for_mate_or_check(attacker, target_v, target_h):
 	return bonus_score
 
 func _on_ai_move_pressed() -> void:
+	$Timer.stop()
 	var posible_move = [];
 	b = true
 	for p in pieces:
@@ -614,7 +682,7 @@ func _on_ai_move_pressed() -> void:
 							var score = get_move_score(p, v, h)
 							posible_move.append({"p": p, "v": v, "h": h, "score": score})
 	debugLog.text = str(len(posible_move))
-	#print(posible_move)
+	print(posible_move)
 	if len(posible_move) == 0:
 		update_game_status_ui("MAT or PAT. The bot cannot walk.")
 		return
@@ -635,26 +703,74 @@ func _on_ai_move_pressed() -> void:
 	var move_successful = true
 	if target_piece != null:
 		highlight_attack(target_piece)
-		if target_piece.moved and target_piece.defense > 0:
-			debugLog.text = "Бот б'є по броні"
-			target_piece.take_attack(attacker.attack, "ARMOR")
-			
-			var push_v = target_piece.prev_vertid
-			var push_h = target_piece.prev_horzid
-			var obstruction = get_piece_at(push_v, push_h)
-			
-			if obstruction == null:
-				target_piece.placeAtCell(push_v, push_h)
-				move_successful = false
+		#await get_tree().create_timer(0.5).timeout
+		
+		var attack_tween = attacker.placeAtCell(target_v, target_h, true, true)
+		if attack_tween: 
+			await attack_tween.finished
+		
+		var damage_to_deal = attacker.attack
+		var is_royal_punishment = false
+		if attacker.type == 0:
+			var king_attackers = get_attackers_of_square(attacker.vertid, attacker.horzid, target_piece.color)
+			if target_piece in king_attackers:
+				damage_to_deal = 9999
+				is_royal_punishment = true
+				debugLog.text = "Бот застосував ВАНШОТ!"
+		
+		if is_royal_punishment:
+			var is_dead = target_piece.take_attack(damage_to_deal, "HP")
+			spawn_damage_text(target_piece.global_position, damage_to_deal, "CRIT")
+			if is_dead:
+				removePiece(target_piece)
+				attacker.placeAtCell(target_v, target_h, false, false)
+				finish_move(attacker)
+				return
 			else:
-				var is_dead = target_piece.take_attack(attacker.attack, "HP")
-				if is_dead:
-					removePiece(target_piece)
-					move_successful = true
-				else:
+				await _return_piece_home(attacker, start_v, start_h)
+				finish_move(attacker)
+				return
+		elif target_piece.moved and target_piece.defense > 0:
+			debugLog.text = "Бот б'є по броні"
+			
+			var current_def = target_piece.defense
+			var damage_to_armor = min(current_def, damage_to_deal) # Броня бере на себе скільки може
+			var damage_to_hp = max(0, damage_to_deal - current_def)
+			
+			target_piece.take_attack(damage_to_deal, "ARMOR")
+			spawn_damage_text(target_piece.global_position, damage_to_armor, "ARMOR")
+			
+			var is_dead = false
+			if damage_to_hp > 0:
+				is_dead = target_piece.take_attack(damage_to_hp, "HP")
+				spawn_damage_text(target_piece.global_position, damage_to_hp, "HP")
+			
+			if is_dead:
+				removePiece(target_piece)
+				attacker.placeAtCell(target_v, target_h, false, false)
+				if attacker.type == 5: 
+					await handle_pawn_promotion(attacker)
+				finish_move(attacker)
+				return
+			else:
+				var push_v = target_piece.prev_vertid
+				var push_h = target_piece.prev_horzid
+				var obstruction = get_piece_at(push_v, push_h)
+				
+				if obstruction == null:
+					target_piece.placeAtCell(push_v, push_h)
 					move_successful = false
+				else:
+					is_dead = target_piece.take_attack(damage_to_hp, "HP")
+					spawn_damage_text(target_piece.global_position, damage_to_hp, "HP")
+					if is_dead:
+						removePiece(target_piece)
+						move_successful = true
+					else:
+						move_successful = false
 		else:
-			var is_dead = target_piece.take_attack(attacker.attack, "HP")
+			var is_dead = target_piece.take_attack(damage_to_deal, "HP")
+			spawn_damage_text(target_piece.global_position, damage_to_deal, "HP")
 			if is_dead:
 				removePiece(target_piece)
 				move_successful = true
@@ -663,12 +779,15 @@ func _on_ai_move_pressed() -> void:
 	else:
 		move_successful = true
 	
+	highlight_attack(null)
 	if move_successful:
-		attacker.placeAtCell(target_v, target_h)
+		var animated = (target_piece == null) 
+		attacker.placeAtCell(target_v, target_h, animated, false)
 		if attacker.type == 5:
 			await handle_pawn_promotion(attacker)
 	else:
-		attacker.placeAtCell(attacker.vertid, attacker.horzid)
+		# Повертаємося назад з анімацією
+		await _return_piece_home(attacker, start_v, start_h)
 	activatePiece(null)
 	check_for_check_status()
 	check_draw()
@@ -740,3 +859,10 @@ func show_possible_moves(piece):
 			if piece.canMove2Cell(v, h) and is_move_safe(piece, v, h):
 				var tile_pos = Vector2i(v, 7 - h)
 				highlight_map.set_cell(tile_pos, 0, Vector2i(0, 0))
+
+func spawn_damage_text(pos: Vector2, amount: int, type: String):
+	var txt_scene = preload("res://scene/FloatingText.tscn")
+	var txt = txt_scene.instantiate()
+	add_child(txt)
+	txt.global_position = pos + Vector2(0, -30)
+	txt.start_anim(amount, type)

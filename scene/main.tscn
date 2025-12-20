@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=4 uid="uid://38kbdhxbjcdf"]
+[gd_scene load_steps=20 format=4 uid="uid://38kbdhxbjcdf"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_v0l8b"]
 [ext_resource type="Texture2D" uid="uid://du7753iufxapy" path="res://img/Gray_Cell.png" id="2_k5irf"]
@@ -79,6 +79,15 @@ corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
 shadow_color = Color(0, 0, 0, 0.466667)
 shadow_size = 10
+
+[sub_resource type="LabelSettings" id="LabelSettings_giay0"]
+font_size = 24
+
+[sub_resource type="LabelSettings" id="LabelSettings_2gncs"]
+font_size = 24
+
+[sub_resource type="LabelSettings" id="LabelSettings_76mea"]
+font_size = 24
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_v0l8b")
@@ -207,41 +216,50 @@ grow_vertical = 2
 
 [node name="GameStatusLabel" type="Label" parent="HUD/SidePanel"]
 layout_mode = 2
+size_flags_vertical = 0
+label_settings = SubResource("LabelSettings_giay0")
+autowrap_mode = 3
 
 [node name="HSeparator" type="HSeparator" parent="HUD/SidePanel/GameStatusLabel"]
 layout_mode = 2
-offset_top = 250.0
+offset_top = 357.0
 offset_right = 250.0
-offset_bottom = 254.0
+offset_bottom = 361.0
 
 [node name="UnitNameLabel" type="Label" parent="HUD/SidePanel/GameStatusLabel"]
 layout_mode = 2
-offset_top = 270.0
+offset_top = 377.0
 offset_right = 250.0
-offset_bottom = 293.0
+offset_bottom = 411.0
+label_settings = SubResource("LabelSettings_2gncs")
 
-[node name="UnitStatsLabel" type="Label" parent="HUD/SidePanel/GameStatusLabel"]
+[node name="UnitStatsLabel" type="RichTextLabel" parent="HUD/SidePanel/GameStatusLabel"]
 layout_mode = 2
-offset_top = 300.0
+offset_top = 407.0
 offset_right = 250.0
-offset_bottom = 323.0
+offset_bottom = 441.0
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+tab_size = 8
 
 [node name="HSeparator2" type="HSeparator" parent="HUD/SidePanel/GameStatusLabel"]
 layout_mode = 2
-offset_top = 550.0
+offset_top = 657.0
 offset_right = 250.0
-offset_bottom = 554.0
+offset_bottom = 661.0
 
 [node name="PromotionContainer" type="VBoxContainer" parent="HUD/SidePanel/GameStatusLabel"]
 visible = false
 layout_mode = 2
-offset_top = 493.0
+offset_top = 693.0
 offset_right = 250.0
-offset_bottom = 656.0
+offset_bottom = 867.0
 
 [node name="ChoosePiece" type="Label" parent="HUD/SidePanel/GameStatusLabel/PromotionContainer"]
 layout_mode = 2
 text = "Choose Piece"
+label_settings = SubResource("LabelSettings_76mea")
 
 [node name="QueenBtn" type="Button" parent="HUD/SidePanel/GameStatusLabel/PromotionContainer"]
 layout_mode = 2
