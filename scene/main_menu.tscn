@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://clkaghb22k0u"]
+[gd_scene load_steps=7 format=3 uid="uid://clkaghb22k0u"]
 
 [ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_fb43i"]
 
@@ -30,6 +30,9 @@ corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
 shadow_color = Color(0, 0, 0, 0.466667)
 shadow_size = 10
+
+[sub_resource type="LabelSettings" id="LabelSettings_pg8ov"]
+font_size = 24
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -72,6 +75,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
 text = "Play"
 
 [node name="Main_Menu_BotvsBot" type="Button" parent="Button_Manager"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 5
 size_flags_vertical = 7
@@ -116,6 +120,106 @@ grow_horizontal = 2
 theme_override_font_sizes/font_size = 72
 text = "D&D Chess"
 
+[node name="InfoPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -416.0
+offset_top = -295.0
+offset_right = 416.0
+offset_bottom = 295.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="InfoPanel"]
+layout_mode = 2
+text = "How to Play: RPG Chess
+RPG Combat: Capturing isn't instant! Pieces have HP and Defense. You must deal enough damage to reduce HP to 0 to remove a piece.
+
+🔹 Defense & Armor: Defense reduces damage (Dmg = Atk - Def). If an enemy survives your hit, they might be pushed back, and your piece will return to its original spot.
+
+🔹 The King's Power: Beware of the Royal Punishment! The King instantly one-shots (9999 Dmg) any enemy that attacks him from close range."
+label_settings = SubResource("LabelSettings_pg8ov")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Ok" type="Button" parent="InfoPanel"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 36
+theme_override_styles/hover = SubResource("StyleBoxFlat_b2r71")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rqiun")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
+text = "Ok"
+
+[node name="ChoosePlayMode" type="VBoxContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -258.0
+offset_top = -155.5
+offset_right = 258.0
+offset_bottom = 155.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="PlayervsPlayer" type="Button" parent="ChoosePlayMode"]
+layout_mode = 2
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 48
+theme_override_styles/hover = SubResource("StyleBoxFlat_b2r71")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rqiun")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
+text = "Player vs Player"
+
+[node name="PlayervsBot" type="Button" parent="ChoosePlayMode"]
+layout_mode = 2
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 48
+theme_override_styles/hover = SubResource("StyleBoxFlat_b2r71")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rqiun")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
+text = "Player vs Bot"
+
+[node name="BotvsBot" type="Button" parent="ChoosePlayMode"]
+layout_mode = 2
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 48
+theme_override_styles/hover = SubResource("StyleBoxFlat_b2r71")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rqiun")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8366x")
+text = "Bot vs Bot"
+
 [connection signal="pressed" from="Button_Manager/Main_Menu_Play" to="." method="_on_main_menu_play_pressed"]
 [connection signal="pressed" from="Button_Manager/Main_Menu_BotvsBot" to="." method="_on_main_menu_botvs_bot_pressed"]
 [connection signal="pressed" from="Button_Manager/Main_Menu_Exit" to="." method="_on_main_menu_exit_pressed"]
+[connection signal="pressed" from="InfoPanel/Ok" to="." method="_on_ok_pressed"]
+[connection signal="pressed" from="ChoosePlayMode/PlayervsPlayer" to="." method="_on_playervs_player_pressed"]
+[connection signal="pressed" from="ChoosePlayMode/PlayervsBot" to="." method="_on_playervs_bot_pressed"]
+[connection signal="pressed" from="ChoosePlayMode/BotvsBot" to="." method="_on_botvs_bot_pressed"]

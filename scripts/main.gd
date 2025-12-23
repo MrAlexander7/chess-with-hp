@@ -88,7 +88,7 @@ func update_unit_ui(piece):
 	var p_name = type_names.get(piece.type, "Unknown")
 	unit_name_label.text = "%s %s" % [color_name, p_name]
 	
-	var stats_text = "[img=42x42]res://img/icon_hp.png[/img] HP: %d\n" % piece.current_hp
+	var stats_text = "[img=64x64]res://img/icon_hp.png[/img] HP: %d\n" % piece.current_hp
 	stats_text += "[img=42x42]res://img/icon_attack.png[/img] Attack: %d\n" % piece.attack
 	stats_text += "[img=42x42]res://img/icon_defense.png[/img] Defense: %d\n" % piece.defense
 	
